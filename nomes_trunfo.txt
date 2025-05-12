@@ -1,0 +1,42 @@
+Alan Turing
+Tim Berners-Lee
+Linus Torvalds
+Leonard Kleinrock
+Ray Tomlinson
+Sergey Brin
+Larry Page
+Jimmy Wales
+Steve Jobs
+Bill Gates
+Mark Zuckerberg
+Ada Lovelace
+George Boole
+Konrad Zuse
+John Von Neumann
+Grace Hopper
+Joseph Carl Robnett Licklider
+John McCarthy
+Edsger Dijkstra
+Ken Thompson
+Blaise Pascal
+Charles Babbage
+Reynold B. Johnson
+Dennis Ritchie
+Brian Kernighan
+Richard Stallman
+Claude Elwood Shannon
+Donald Knuth
+Andrew S. Tanenbaum
+Niklaus Wirth
+Marvin Minsky
+John Backus
+Edgar Codd
+Ward Cunningham
+Alexandra Elbakyan
+Edith Ranzini
+Frances Allen
+Hedy Lamarr
+Margaret Hamilton
+Mary Kenneth Keller
+Susan Kare
+John Carmack
