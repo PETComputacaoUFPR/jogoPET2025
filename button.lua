@@ -1,3 +1,7 @@
+-- Arquivo que faz o design dos botões do jogo e verifica se eles foram pressionados
+--[[ Caso for da vontade do grupo, também podemos dividir outras funções e desenhos em vários
+arquivos, para ficar mais organizado --]]
+
 local love = require "love"
 
 function Button (text, func, func_param, width, heigth)

@@ -1,20 +1,21 @@
 local love = require "love"
-local button = require "Button"
+local button = require "button"
 
 math.randomseed(os.time())
 
+--[[ Aqui tem os estados do jogo, ele começa sempre no menu
+"running' é ele rodando, "paused" quando pausamos com "esc"
+O estado "ended" ainda não é utilizado, pois o jogo ainda não tem fim --]]
 local game = {
-    --difficulty = 1,
     state = {
         menu = true,
         paused = false,
         running = false,
         ended = false,
     },
-    --points = 0,
-    --levels = {15, 30, 45, 60, 75, 120}
 }
 
+-- Fonte do que está escrito no jogo
 local fonts = {
     medium = {
         font = love.graphics.newFont(16),
@@ -30,13 +31,15 @@ local fonts = {
     }
 }
 
-local player = { --dimensões do bonequinho
+-- Dimensões do bonequinho
+local player = { 
     radius = 20,
     x = 30,
     y = 30,
     speed = 300
 }
 
+-- Variáveis locais que representam o cursor do mouse e os botões
 local cursorX, cursorY = 0, 0
 
 local cursorImage = {}
@@ -46,12 +49,14 @@ local botao = {
     x = 30,
     y = 30
 }
-
-local buttons = { --botões do menu
+-- Botões do menu
+local buttons = { 
     menu_state = {},
     paused_state = {}
 }
 
+--[[ Variáveis locais para manipular diferentes coisas, como:
+mapas, portas lógicas, posição de objetos, posição do jogador ]]--
 local currentMap = "mainMap"
 
 local andGate = {}
@@ -79,10 +84,13 @@ local interactionStates = {
     level2 = true
 }
 
+-- Mensagem 1 do tutorial
 local showInteractionMessage = false
 
+-- Mensagem 2 do tutorial
 local showInteractionMessage2 = false
 
+-- Funções para manipular os estados do jogo
 local function changeGameState(state)
     game.state["menu"] = state == "menu"
     game.state["ended"] = state == "ended"
@@ -90,12 +98,14 @@ local function changeGameState(state)
     game.state["paused"] = state == "paused"
 end
 
+-- Ao iniciar o jogo e clicarmos em jogar, o jogo muda
+-- para o estado "running"
 local function startNewGame ()
     changeGameState("running")
-    --game.points = 0
 end
 
-function love.mousepressed(x, y, button, istouch, presses) --Mouse clicar nos botões
+-- Função que verifica quando o mouse clica nos botões
+function love.mousepressed(x, y, button, istouch, presses) 
     if not game.state["running"] then
         if button == 1 then
             if game.state["menu"] then
@@ -111,6 +121,10 @@ function love.mousepressed(x, y, button, istouch, presses) --Mouse clicar nos bo
     end
 end
 
+--[[ Começo de uma das 3 funções principais: love.load()
+Essa função é responsável por carregar tudo que será exibido no jogo, não só
+design, mas suas bibliotecas de manipulação de câmera, animação do personagem,
+mapas, fontes, colliders, sons e diferentes estados --]]
 function love.load()
     wf = require 'libraries/windfield'
     world = wf.newWorld(0, 0)
@@ -204,6 +218,11 @@ function love.load()
     buttons.paused_state.exit_game = button("Sair", love.event.quit, nil, 140, 40)
 end
 
+--[[ Essa é a segunda função principal: love.update()
+Ela é responsável por tudo que ocorre no momento em que estamos jogando o jogo,
+sempre atualizando (fazendo update) com base nas ações do personagem. Por exemplo:
+quando clicamos para mover o personagem nas setas, quando movemos as portas lógicas,
+câmera acompanhando o personagem enquanto se move, são todas ações gerenciadas por essa função --]]
 function love.update(dt)
 
     if game.state["menu"] or game.state["paused"] then
@@ -277,7 +296,8 @@ function love.update(dt)
         player.y = player.collider:getY()
     end
 
-    cam:lookAt(player.x, player.y) -- Camera seguir o boneco
+    -- Camera seguir o boneco
+    cam:lookAt(player.x, player.y) 
 
     -- Não aparecer bordas pretas
     local w = love.graphics.getWidth()
@@ -303,6 +323,13 @@ function love.update(dt)
     end
 end
 
+--[[ Essa é a última função principal: love.draw().
+Enquanto na função love.load() nós carregamos tudo que vamos utilizar no jogo,
+nessa função, nós "desenhamos" o que propriamente aparecerá no mapa, em cada nível ou
+a partir de cada ação do personagem. Por exemplo, se nós completamos o nível 1 e o personagem
+não precisa voltar mais lá, nós não vamos desenhar mais o nível 1. Outro exemplo seria ao entrar
+no nível 1, os desenhos do mapa principal precisarão se apagar por um momento e só os do mapa do
+nível 1 serem exibidos --]]
 function love.draw()
     love.graphics.setFont(font8bit)
 
@@ -388,11 +415,15 @@ function love.draw()
     end
 end
 
+-- Função para determinar se a porta lógica está posicionada no lugar correto
+-- Se ela estiver, então a próxima ação será desbloqueada
 local function isGateAtCorrectPosition(gate, destination)
     local tolerance = 40 -- Tolerância para considerar que a porta está na posição correta
     return math.abs(gate.x - destination.x) < tolerance and math.abs(gate.y - destination.y) < tolerance
 end
 
+-- Função para checar se todas as portas lógicas estão posicionadas no lugar correto
+-- Se estiverem, então a próxima ação será desbloqueada
 local function checkGatePositions()
     if currentMap == "level1" then
         if isGateAtCorrectPosition(andGate, gateDestinations[1]) then
@@ -437,12 +468,17 @@ local function checkGatePositions()
         --]]
 end
 
-
+--[[ Função voltada para o debug do código, utilizada quando queremos
+queremos saber em que posição está o jogador no mapa para configurar
+as portas lógicas. Não é utilizada diretamente no jogo. --]]
 local function printPlayerPosition()
     print("Player position: x = " .. player.x .. ", y = " .. player.y)
 end
 
--- Teclas de atalho
+--[[ Teclas de atalho
+Não apenas teclas auxiliares, mas elas que determinam:
+quando pausa o jogo, se queremos pausar a música, quando pegamos uma
+porta lógica na mão, se queremos saber a posição do jogador (debug) --]]
 function love.keypressed(key)
     if key == 'escape' then
         if game.state["paused"] then
@@ -504,6 +540,7 @@ function love.keypressed(key)
     end
 end
 
+-- Função que determina se você está próximo suficiente da porta para pegar ela na mão
 function isNearGate(gate)
     if gate == nil then
         return false
@@ -550,6 +587,7 @@ function clearColliders()
     walls = {}
 end
 
+-- Função para carregar as colisões de determinados mapas (níveis diferentes, mapas diferentes)
 function loadMapCollisions(map)
     if map and map.layers then  -- Verifica se o mapa e as camadas existem
         local collisionLayer = map.layers["Walls"]  -- Obtem a camada de colisão chamada "Walls"
