@@ -90,6 +90,25 @@ local showInteractionMessage = false
 -- Mensagem 2 do tutorial
 local showInteractionMessage2 = false
 
+-- Variáveis para a animação do ônibus escolar
+local schoolBus = {
+    texture = nil,
+    x = -200, -- Começa fora da tela à esquerda
+    y = 450,  -- Posição Y onde o ônibus vai parar
+    targetX = 300, -- Posição onde o ônibus para para deixar o jogador
+    speed = 150,
+    state = "arriving", -- "arriving", "waiting", "leaving", "gone"
+    waitTimer = 0,
+    waitDuration = 2, -- Tempo que o ônibus espera antes de ir embora
+    scale = 0.2 -- Escala para reduzir o tamanho do ônibus
+}
+
+local gameIntro = {
+    active = false, -- Será true quando iniciar o jogo
+    playerVisible = false, -- Jogador só aparece depois que sai do ônibus
+    playerDropped = false -- Flag para marcar se o jogador já foi posicionado
+}
+
 -- Funções para manipular os estados do jogo
 local function changeGameState(state)
     game.state["menu"] = state == "menu"
@@ -102,6 +121,12 @@ end
 -- para o estado "running"
 local function startNewGame ()
     changeGameState("running")
+    gameIntro.active = true
+    gameIntro.playerVisible = false
+    gameIntro.playerDropped = false
+    schoolBus.state = "arriving"
+    schoolBus.x = -200
+    schoolBus.waitTimer = 0
 end
 
 -- Função que verifica quando o mouse clica nos botões
@@ -145,6 +170,7 @@ function love.load()
     -- Texturas
     andGateTexture = love.graphics.newImage('maps/andlogic.png')
     orGateTexture = love.graphics.newImage('maps/orlogic.png')
+    schoolBus.texture = love.graphics.newImage('maps/school_bus.png')
 
     andGate = {
         x = 762,
@@ -232,72 +258,126 @@ function love.update(dt)
     local isMoving = false
 
     if game.state["running"] then
-        player.anim:update(dt)
-
-        local nearInteraction, chairIndex = isNearInteractionObject()
-
-        showInteractionMessage = nearInteraction
-
-        showInteractionMessage2 = isNearGate(andGate)
-
-        local vx = 0
-        local vy = 0
-
-        if love.keyboard.isDown ("right") then
-            vx = player.speed
-            player.anim = player.animations.right
-            isMoving = true
+        -- Durante a animação do ônibus
+        if gameIntro.active then
+            -- Quando o ônibus está saindo, o jogador fica visível
+            if schoolBus.state == "leaving" then
+                gameIntro.playerVisible = true
+                -- Só posiciona o jogador uma vez quando o ônibus começa a sair
+                if not gameIntro.playerDropped then
+                    player.collider:setPosition(schoolBus.x + 20, schoolBus.y + 20)
+                    player.x = schoolBus.x + 20
+                    player.y = schoolBus.y + 20
+                    -- Para a velocidade do jogador
+                    player.collider:setLinearVelocity(0, 0)
+                    -- Define a animação para parado olhando para frente (idle)
+                    player.anim = player.animations.down
+                    player.anim:gotoFrame(2) -- Frame 2 é o idle/parado
+                    gameIntro.playerDropped = true
+                end
+            elseif schoolBus.state == "gone" then
+                gameIntro.active = false
+                gameIntro.playerVisible = true
+            end
         end
+        
+        -- Movimento do jogador (só bloqueia se a intro ainda está ativa E o jogador não foi deixado)
+        if not (gameIntro.active and not gameIntro.playerDropped) then
+            player.anim:update(dt)
 
-        if love.keyboard.isDown ("left") then
-            vx = player.speed * -1
-            player.anim = player.animations.left
-            isMoving = true
+            local nearInteraction, chairIndex = isNearInteractionObject()
+
+            showInteractionMessage = nearInteraction
+
+            showInteractionMessage2 = isNearGate(andGate)
+
+            local vx = 0
+            local vy = 0
+
+            if love.keyboard.isDown ("right") then
+                vx = player.speed
+                player.anim = player.animations.right
+                isMoving = true
+            end
+
+            if love.keyboard.isDown ("left") then
+                vx = player.speed * -1
+                player.anim = player.animations.left
+                isMoving = true
+            end
+
+            if love.keyboard.isDown ("down") then
+                vy = player.speed
+                player.anim = player.animations.down
+                isMoving = true
+            end
+
+            if love.keyboard.isDown ("up") then
+                vy = player.speed * -1
+                player.anim = player.animations.up
+                isMoving = true
+            end
+
+            player.collider:setLinearVelocity(vx, vy)
+            player.x = player.collider:getX()
+            player.y = player.collider:getY()
+
+            -- Atualizar posição da porta lógica se ela estiver sendo carregada
+            if andGate.beingCarried then
+                andGate.x = player.x
+                andGate.y = player.y
+            end
+
+            if andGateExtra.beingCarried then
+                andGateExtra.x = player.x
+                andGateExtra.y = player.y
+            end
+
+            if orGate.beingCarried then
+                orGate.x = player.x
+                orGate.y = player.y
+            end
+
+            if isMoving == false then
+                player.anim:gotoFrame(2)
+            end
+
+            world:update(dt)
+            player.x = player.collider:getX()
+            player.y = player.collider:getY()
         end
-
-        if love.keyboard.isDown ("down") then
-            vy = player.speed
-            player.anim = player.animations.down
-            isMoving = true
-        end
-
-        if love.keyboard.isDown ("up") then
-            vy = player.speed * -1
-            player.anim = player.animations.up
-            isMoving = true
-        end
-
-        player.collider:setLinearVelocity(vx, vy)
-        player.x = player.collider:getX()
-        player.y = player.collider:getY()
-
-        -- Atualizar posição da porta lógica se ela estiver sendo carregada
-        if andGate.beingCarried then
-            andGate.x = player.x
-            andGate.y = player.y
-        end
-
-        if andGateExtra.beingCarried then
-            andGateExtra.x = player.x
-            andGateExtra.y = player.y
-        end
-
-        if orGate.beingCarried then
-            orGate.x = player.x
-            orGate.y = player.y
-        end
-
-        if isMoving == false then
-            player.anim:gotoFrame(2)
-        end
-
-        world:update(dt)
-        player.x = player.collider:getX()
-        player.y = player.collider:getY()
     end
 
-    -- Camera seguir o boneco
-    cam:lookAt(player.x, player.y) 
+    -- Atualiza a animação do ônibus escolar
+    if schoolBus.state == "arriving" then
+        schoolBus.x = schoolBus.x + schoolBus.speed * dt
+        if schoolBus.x >= schoolBus.targetX then
+            schoolBus.x = schoolBus.targetX
+            schoolBus.state = "waiting"
+        end
+    elseif schoolBus.state == "waiting" then
+        schoolBus.waitTimer = schoolBus.waitTimer + dt
+        if schoolBus.waitTimer >= schoolBus.waitDuration then
+            schoolBus.state = "leaving"
+        end
+    elseif schoolBus.state == "leaving" then
+        schoolBus.x = schoolBus.x - schoolBus.speed * dt
+        -- Ônibus sai em linha reta (mesma altura Y)
+        -- Remove qualquer modificação de Y para manter trajetória reta
+        if schoolBus.x <= -200 then
+            schoolBus.x = -200
+            schoolBus.state = "gone"
+        end
+    end
+
+    -- Camera seguir o boneco (ou o ônibus durante a intro)
+    if gameIntro.active and schoolBus.state ~= "gone" then
+        -- Durante a intro, a câmera acompanha o ônibus
+        cam:lookAt(schoolBus.x + 100, schoolBus.y)
+    else
+        -- Movimento normal: câmera segue o jogador
+        cam:lookAt(player.x, player.y)
+    end 
 
     -- Não aparecer bordas pretas
     local w = love.graphics.getWidth()
@@ -337,7 +417,18 @@ function love.draw()
         cam:attach()
             gameMap:drawLayer(gameMap.layers["Ground"]) --desenhando chão
             gameMap:drawLayer(gameMap.layers["Trees"]) --desenhando árvores
-            player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, nil, 6, 9) --desenhando o boneco
+            
+            -- Desenha o ônibus escolar se estiver ativo (dentro da câmera)
+            if gameIntro.active then
+                love.graphics.setColor(1, 1, 1, 1) -- Reseta a cor para branco
+                -- Virar o ônibus horizontalmente (escala X negativa)
+                love.graphics.draw(schoolBus.texture, schoolBus.x, schoolBus.y, 0, -schoolBus.scale, schoolBus.scale)
+            end
+            
+            -- Só desenha o jogador se ele estiver visível (não dentro do ônibus)
+            if not gameIntro.active or gameIntro.playerVisible then
+                player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, nil, 6, 9) --desenhando o boneco
+            end
 
             if showInteractionMessage then
                 -- Posição da mensagem em relação ao jogador
