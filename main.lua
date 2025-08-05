@@ -368,7 +368,6 @@ function love.draw()
                 local messageY = andGate.y - 50
 
                 love.graphics.draw(balloonImage, messageX - 30, messageY - 18)
-
                 love.graphics.setFont(fontSmaller)
                 love.graphics.setColor(0, 0, 0, 1) -- Cor preta
                 love.graphics.printf("aperte E para pegar/soltar a porta logica", messageX, messageY, 100, "center")
