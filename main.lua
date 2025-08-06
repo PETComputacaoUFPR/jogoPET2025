@@ -168,9 +168,9 @@ function love.load()
     level1Map = sti('maps/level1.lua')
     level2Map = sti('maps/level2.lua')
     -- Texturas
-    andGateTexture = love.graphics.newImage('maps/andlogic.png')
-    orGateTexture = love.graphics.newImage('maps/orlogic.png')
-    schoolBus.texture = love.graphics.newImage('maps/school_bus.png')
+    andGateTexture = love.graphics.newImage('maps/Texture/andlogic.png')
+    orGateTexture = love.graphics.newImage('maps/Texture/orlogic.png')
+    schoolBus.texture = love.graphics.newImage('maps/Texture/school_bus.png')
 
     andGate = {
         x = 762,
@@ -216,7 +216,7 @@ function love.load()
 
     fontSmaller = love.graphics.newFont('libraries/fonts/8-bit-pusab.ttf', 8)
 
-    balloonImage = love.graphics.newImage('maps/balloon_whitebackground.png')
+    balloonImage = love.graphics.newImage('maps/Texture/balloon_whitebackground.png')
 
     player.collider = world:newBSGRectangleCollider(400, 250, 50, 80, 10)
     player.collider:setFixedRotation(true)
