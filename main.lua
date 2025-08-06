@@ -90,17 +90,33 @@ local showInteractionMessage = false
 -- Mensagem 2 do tutorial
 local showInteractionMessage2 = false
 
+-- NPC
+local npc = {
+    x = 700,
+    y = 600,
+    spriteSheet = nil,
+    grid = nil,
+    animation = nil,
+    dialogues = {
+        "Ola! Utilize E para interagir comigo!",
+        "Acho que tem um professor bravo na sala",
+        "Fale com ele!"
+    },
+    currentDialogue = 1,
+    showDialogue = false
+}
+
 -- Variáveis para a animação do ônibus escolar
 local schoolBus = {
     texture = nil,
     x = -200, -- Começa fora da tela à esquerda
-    y = 450,  -- Posição Y onde o ônibus vai parar
-    targetX = 300, -- Posição onde o ônibus para para deixar o jogador
-    speed = 150,
+    y = 440,  -- Posição Y onde o ônibus vai parar
+    targetX = 400, -- Posição onde o ônibus para para deixar o jogador
+    speed = 400,
     state = "arriving", -- "arriving", "waiting", "leaving", "gone"
     waitTimer = 0,
-    waitDuration = 2, -- Tempo que o ônibus espera antes de ir embora
-    scale = 0.2 -- Escala para reduzir o tamanho do ônibus
+    waitDuration = 0, -- Tempo que o ônibus espera antes de ir embora
+    scale = 0.25 -- Escala para reduzir o tamanho do ônibus
 }
 
 local gameIntro = {
@@ -232,6 +248,11 @@ function love.load()
 
     player.anim = player.animations.left
 
+    -- Carregando o NPC
+    npc.spriteSheet = love.graphics.newImage('sprites/player-sheet2.png')
+    npc.grid = anim8.newGrid(12, 18, npc.spriteSheet:getWidth(), npc.spriteSheet:getHeight())
+    npc.animation = anim8.newAnimation(npc.grid('2-2', 1), 1) -- Frame parado olhando para frente
+
     walls = {}
     loadMapCollisions(gameMap)
 
@@ -265,9 +286,9 @@ function love.update(dt)
                 gameIntro.playerVisible = true
                 -- Só posiciona o jogador uma vez quando o ônibus começa a sair
                 if not gameIntro.playerDropped then
-                    player.collider:setPosition(schoolBus.x + 20, schoolBus.y + 20)
-                    player.x = schoolBus.x + 20
-                    player.y = schoolBus.y + 20
+                    player.collider:setPosition(schoolBus.x, schoolBus.y + 120)
+                    player.x = schoolBus.x
+                    player.y = schoolBus.y + 120
                     -- Para a velocidade do jogador
                     player.collider:setLinearVelocity(0, 0)
                     -- Define a animação para parado olhando para frente (idle)
@@ -281,15 +302,19 @@ function love.update(dt)
             end
         end
         
-        -- Movimento do jogador (só bloqueia se a intro ainda está ativa E o jogador não foi deixado)
-        if not (gameIntro.active and not gameIntro.playerDropped) then
+        -- Movimento do jogador (só permite se a intro não está ativa OU o ônibus já foi embora)
+        if not gameIntro.active or schoolBus.state == "gone" then
             player.anim:update(dt)
+            npc.animation:update(dt) -- Atualizar animação do NPC
 
             local nearInteraction, chairIndex = isNearInteractionObject()
 
             showInteractionMessage = nearInteraction
 
             showInteractionMessage2 = isNearGate(andGate)
+
+            -- Verificar proximidade com NPC
+            npc.showDialogue = isNearNPC()
 
             local vx = 0
             local vy = 0
@@ -371,8 +396,8 @@ function love.update(dt)
     end
 
     -- Camera seguir o boneco (ou o ônibus durante a intro)
-    if gameIntro.active and schoolBus.state ~= "gone" then
-        -- Durante a intro, a câmera acompanha o ônibus
+    if gameIntro.active and schoolBus.state ~= "gone" and not gameIntro.playerDropped then
+        -- Durante a intro, a câmera acompanha o ônibus até largar o jogador
         cam:lookAt(schoolBus.x + 100, schoolBus.y)
     else
         -- Movimento normal: câmera segue o jogador
@@ -428,6 +453,35 @@ function love.draw()
             -- Só desenha o jogador se ele estiver visível (não dentro do ônibus)
             if not gameIntro.active or gameIntro.playerVisible then
                 player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, nil, 6, 9) --desenhando o boneco
+            end
+
+            -- Desenhar NPC
+            npc.animation:draw(npc.spriteSheet, npc.x, npc.y, nil, 5, nil, 6, 9)
+
+            -- Mostrar diálogo do NPC se estiver próximo
+            if npc.showDialogue then
+                -- Calcular posição do balão relativa ao NPC
+                local balloonX = npc.x - 70
+                local balloonY = npc.y - 130
+                
+                -- Desenhar o balão
+                love.graphics.setColor(1, 1, 1, 1) -- Cor branca para o balão
+                love.graphics.draw(balloonImage, balloonX, balloonY)
+                
+                -- Configurar texto
+                love.graphics.setFont(fontSmaller)
+                love.graphics.setColor(0, 0, 0, 1) -- Cor preta para o texto
+                
+                -- Posição do texto dentro do balão (ajustada para ficar centralizada)
+                local textX = balloonX + 20
+                local textY = balloonY + 20
+                local textWidth = 110
+                
+                -- Desenhar o texto do diálogo
+                love.graphics.printf(npc.dialogues[npc.currentDialogue], textX, textY, textWidth, "center")
+                
+                -- Resetar cor
+                love.graphics.setColor(1, 1, 1, 1)
             end
 
             if showInteractionMessage then
@@ -587,6 +641,16 @@ function love.keypressed(key)
 
     if key == 'e' then
         if game.state["running"] then
+            -- Interação com NPC
+            if isNearNPC() then
+                npc.currentDialogue = npc.currentDialogue + 1
+                if npc.currentDialogue > #npc.dialogues then
+                    npc.currentDialogue = 1 -- Volta para o primeiro diálogo
+                end
+                sounds.blip:play() -- Som de interação
+                return -- Sai da função para não executar outras interações
+            end
+            
             local bool, nearbyChair = isNearInteractionObject()
             if nearbyChair then
                 -- Salva a posição atual do jogador
@@ -666,6 +730,13 @@ function isNearInteractionObject()
     end
 
     return false -- Se não estiver perto de nenhuma cadeira, retorna falso
+end
+
+-- Função para verificar proximidade com o NPC
+function isNearNPC()
+    local playerX, playerY = player.x, player.y
+    local distance = math.sqrt((playerX - npc.x)^2 + (playerY - npc.y)^2)
+    return distance < 80 -- Retorna true se estiver próximo o suficiente
 end
 
 
