@@ -74,14 +74,35 @@ local gateDestinations = {
 
 local chairs = {
     {x = 64, y = 896},
-    {x = 1766, y = 1489}
+    {x = 1766, y = 1489},
+    {x = 1766, y = 1766}
 }
+
+-- Posição das moedas no level3
+local coins = {
+    {x = 294, y = 971, Collect = false},
+    {x = 600, y = 1430, Collect = false},
+    {x = 1735, y = 714, Collect = false},
+    {x = 1056, y = 27, Collect = false}
+}
+
+--[[ Posição dos números em bináro e seu valor. 
+--Após comprar os binários '0' ou '1' se aparecerem no jogo ]]--
+local numbers = {
+    { x = 550, y = 390, num = nil },
+    { x = 750, y = 390, num = nil },
+    { x = 940, y = 390, num = nil },
+    { x = 1140, y = 390, num = nil }
+}
+
+CorrectNumber = { 1, 0, 1, 1}
 
 local previousPlayerX, previousPlayerY
 
 local interactionStates = {
     level1 = true,
-    level2 = true
+    level2 = true,
+    level3 = true,
 }
 
 -- Mensagem 1 do tutorial
@@ -101,6 +122,24 @@ local npc = {
         "Ola! Utilize E para interagir comigo!",
         "Acho que tem um professor bravo na sala",
         "Fale com ele!"
+    },
+    currentDialogue = 1,
+    showDialogue = false
+}
+
+-- NPC Albini Level 3
+local npcAlbini = {
+    x = 273,
+    y = 492,
+    spriteSheet = nil,
+    grid = nil,
+    animation = nil,
+    dialogues = {
+        "Ola! Voce usara complemento de 1!",
+        "Troque os numeros 1 por 0 e vice-versa",
+	"Aperte 'b' e compre seus binarios",
+	"Escreva 4 em binário",
+        "Agora transforme 4 para -4"
     },
     currentDialogue = 1,
     showDialogue = false
@@ -183,10 +222,13 @@ function love.load()
     -- Levels
     level1Map = sti('maps/level1.lua')
     level2Map = sti('maps/level2.lua')
+    level3Map = sti('maps/level3.lua')
     -- Texturas
     andGateTexture = love.graphics.newImage('maps/Texture/andlogic.png')
     orGateTexture = love.graphics.newImage('maps/Texture/orlogic.png')
     schoolBus.texture = love.graphics.newImage('maps/Texture/school_bus.png')
+    number0Texture = love.graphics.newImage('maps/Texture/binary0.png')
+    number1Texture = love.graphics.newImage('maps/Texture/binary1.png')
 
     andGate = {
         x = 762,
@@ -253,6 +295,17 @@ function love.load()
     npc.grid = anim8.newGrid(12, 18, npc.spriteSheet:getWidth(), npc.spriteSheet:getHeight())
     npc.animation = anim8.newAnimation(npc.grid('2-2', 1), 1) -- Frame parado olhando para frente
 
+    npcAlbini.spriteSheet = love.graphics.newImage('sprites/player-sheet2.png')
+    npcAlbini.grid = anim8.newGrid(12, 18, npcAlbini.spriteSheet:getWidth(), npcAlbini.spriteSheet:getHeight())
+    npcAlbini.animation = anim8.newAnimation(npcAlbini.grid('2-2', 3), 1) -- Frame parado olhando para direita
+
+    coinImage = love.graphics.newImage('maps/Texture/coin.png') -- Carregando as moedas
+    
+    --[[ Binários só aparecem no jogo após coletar todas as moedas 
+    e comprá-los com o NPC ]] --
+    DrawBinary = false 
+    RealeseBinary = false 
+
     walls = {}
     loadMapCollisions(gameMap)
 
@@ -315,6 +368,7 @@ function love.update(dt)
 
             -- Verificar proximidade com NPC
             npc.showDialogue = isNearNPC()
+            npcAlbini.showDialogue = isNearNPC()
 
             local vx = 0
             local vy = 0
@@ -362,7 +416,7 @@ function love.update(dt)
                 orGate.x = player.x
                 orGate.y = player.y
             end
-
+	            
             if isMoving == false then
                 player.anim:gotoFrame(2)
             end
@@ -426,6 +480,7 @@ function love.update(dt)
     if cam.y > (mapH - h/2) then
         cam.y = (mapH - h/2)
     end
+
 end
 
 --[[ Essa é a última função principal: love.draw().
@@ -537,6 +592,74 @@ function love.draw()
             --world:draw()
         cam:detach() 
     end
+    
+    if currentMap == "level3" then
+        cam:attach()
+
+ 	    level3Map:drawLayer(level3Map.layers["Ground"]) --desenhando chão
+	    level3Map:drawLayer(level3Map.layers["letters"]) --desenhando o puzzle
+	    
+	    -- Desenhar moedas e apagá-las ao passar com o player por cima
+            for i, coin in ipairs(coins) do
+                RealeseBinary = false 
+		if not coin.Collect then
+                    love.graphics.draw(coinImage, coin.x, coin.y)
+	    	    if isClose(coin.x, coin.y) then 
+		        coin.Collect = true
+		    end
+		else RealeseBinary = true
+	        end	
+	    end
+     		
+	    -- Desenhar NPC
+            npcAlbini.animation:draw(npcAlbini.spriteSheet, npcAlbini.x, npcAlbini.y, nil, 5, nil, 6, 9)
+
+	    if npcAlbini.showDialogue then
+                -- Calcular posição do balão relativa ao NPC
+                local balloonX = npcAlbini.x - 70
+                local balloonY = npcAlbini.y - 130
+		-- novo npc x = 1708 e y = 1745
+                -- Desenhar o balão
+                love.graphics.setColor(1, 1, 1, 1) -- Cor branca para o balão
+                love.graphics.draw(balloonImage, balloonX, balloonY)
+
+                -- Configurar texto
+                love.graphics.setFont(fontSmaller)
+                love.graphics.setColor(0, 0, 0, 1) -- Cor preta para o texto
+
+                -- Posição do texto dentro do balão (ajustada para ficar centralizada)
+                local textX = balloonX + 20
+                local textY = balloonY + 20
+                local textWidth = 110
+
+                -- Desenhar o texto do diálogo
+               love.graphics.printf(npcAlbini.dialogues[npcAlbini.currentDialogue], textX, textY, textWidth, "center")
+
+                -- Resetar cor
+                love.graphics.setColor(1, 1, 1, 1)
+            end
+                -- Posição da mensagem em relação ao jogador
+                local messageX = npcAlbini.x -30 
+                local messageY = npcAlbini.y - 60
+
+                love.graphics.setFont(fontSmall)
+                love.graphics.setColor(0, 0, 0, 1) -- Cor preta
+                love.graphics.setColor(1, 1, 1, 1) -- Resetando cor para branco
+
+	    -- Desenhar todos os numeros "0" e "1"
+            for i, number in ipairs(numbers) do 
+	        if number.num == 0 then 
+                    love.graphics.draw(number0Texture, number.x, number.y)
+		elseif number.num == 1 then 
+		    love.graphics.draw(number1Texture, number.x, number.y)
+		end
+	    end
+
+            player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, nil, 6, 9) --desenhando o boneco
+            --world:draw()
+        cam:detach()
+    end
+
 
     if game.state["menu"] then
         menuMap:drawLayer(menuMap.layers["default"])
@@ -558,6 +681,7 @@ function love.draw()
         --love.graphics.circle ("fill", player.x, player.y, botao.radius)
     end
 end
+
 
 -- Função para determinar se a porta lógica está posicionada no lugar correto
 -- Se ela estiver, então a próxima ação será desbloqueada
@@ -592,6 +716,18 @@ local function checkGatePositions()
             currentMap = "mainMap"
         end
     end
+
+     if currentMap == "level3" then
+        if numberRightPlace() then
+            -- Números estão na ordem correta, vá para o mapa principal
+            interactionStates.level3 = false
+            changeGameState("running")
+            clearColliders()
+            loadMapCollisions(gameMap)
+            currentMap = "mainMap"
+        end
+    end
+
 
     -- Restaura a posição do jogador
     if currentMap == "mainMap" then
@@ -638,6 +774,16 @@ function love.keypressed(key)
     if key == 'z' then
         sounds.music:stop()
     end
+ 
+    if key == 'b' then -- Botão para comprar binários
+        if currentMap == "level3" then
+	    if RealeseBinary then
+                if isNearNPC() then 
+                    DrawBinary  = true 
+	        end
+	     end
+	end
+    end
 
     if key == 'e' then
         if game.state["running"] then
@@ -647,6 +793,11 @@ function love.keypressed(key)
                 if npc.currentDialogue > #npc.dialogues then
                     npc.currentDialogue = 1 -- Volta para o primeiro diálogo
                 end
+		npcAlbini.currentDialogue = npcAlbini.currentDialogue + 1
+		if npcAlbini.currentDialogue > #npcAlbini.dialogues then
+                    npcAlbini.currentDialogue = 1 -- Volta para o primeiro diálogo
+                end
+
                 sounds.blip:play() -- Som de interação
                 return -- Sai da função para não executar outras interações
             end
@@ -661,7 +812,9 @@ function love.keypressed(key)
                     currentMap = "level1"
                 elseif nearbyChair == 2 then
                     currentMap = "level2"
-                end
+	        elseif nearbyChair == 3 then 
+		    currentMap = "level3"
+	    	end
                 -- Limpa e carrega as colisões do novo mapa
                 clearColliders()
                 loadMapCollisions(currentMap)
@@ -686,12 +839,28 @@ function love.keypressed(key)
                 end
                 checkGatePositions()
             end
+	    if currentMap == "level3" then
+                for i, number in ipairs(numbers) do
+                    if isClose (number.x, number.y) then 
+		    -- Testa proximidade com o local dos números
+                        if DrawBinary then 
+                            if number.num == nil then
+                                number.num = 0
+                            elseif number.num == 0 then
+                                number.num = 1
+                            else number.num = 0
+                            end
+                         end
+                     end
+                 end
+		 checkGatePositions()
+	    end
         end
     end
 
     if key == 'p' then -- Pressione 'p' para ver a posição
         printPlayerPosition()
-    end
+    end 
 end
 
 -- Função que determina se você está próximo suficiente da porta para pegar ela na mão
@@ -713,6 +882,26 @@ function isNearGate(gate)
     return false
 end
 
+-- Função para verificar proximidade com as moedas/Objetos/posições
+function isClose(ObjX, ObjY)
+    local playerX, playerY = player.x, player.y  -- Posições do jogador
+    
+    if math.abs(playerX - ObjX) < 95 and math.abs(playerY - ObjY) < 95 then
+	return true
+    end
+    return false
+end
+
+-- Função para verificar se os números estão na posição correta
+function numberRightPlace()
+    for i, number in ipairs(numbers) do
+        if number.num ~= CorrectNumber[i] then
+            return false
+        end
+    end 
+    return true 
+end
+
 -- Função para verificar proximidade do objeto de interação
 function isNearInteractionObject()
     local playerX, playerY = player.x, player.y  -- Posições do jogador
@@ -725,6 +914,8 @@ function isNearInteractionObject()
                 return true, i
             elseif i == 2 and interactionStates.level2 then
                 return true, i
+	    elseif i == 3 and interactionStates.level3 then 
+		return true, i
             end
         end
     end
@@ -736,9 +927,18 @@ end
 function isNearNPC()
     local playerX, playerY = player.x, player.y
     local distance = math.sqrt((playerX - npc.x)^2 + (playerY - npc.y)^2)
-    return distance < 80 -- Retorna true se estiver próximo o suficiente
+    local distance2 = math.sqrt((playerX - npcAlbini.x)^2 + (playerY - npcAlbini.y)^2)
+    return (distance < 80 or  distance2 < 80) -- Retorna true se estiver próximo o suficiente
 end
 
+-- Função para desenhar moedas
+function DrawCoins()
+    for i, coin in ipairs(coins) do
+        if not coin.CollectCoin then 
+	    love.graphics.draw(coinImage, coin.x, coin.y)	
+        end
+    end
+end
 
 -- Função para remover todas as colisões
 function clearColliders()
