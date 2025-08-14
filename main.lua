@@ -139,7 +139,9 @@ local npcAlbini = {
         "Troque os numeros 1 por 0 e vice-versa",
 	"Aperte 'b' e compre seus binarios",
 	"Escreva 4 em binário",
-        "Agora transforme 4 para -4"
+        "Agora transforme 4 para -4",
+	"Compra realizada com sucesso",
+	"Compra negada. Colete todas as moedas"
     },
     currentDialogue = 1,
     showDialogue = false
@@ -515,28 +517,8 @@ function love.draw()
 
             -- Mostrar diálogo do NPC se estiver próximo
             if npc.showDialogue then
-                -- Calcular posição do balão relativa ao NPC
-                local balloonX = npc.x - 70
-                local balloonY = npc.y - 130
-                
-                -- Desenhar o balão
-                love.graphics.setColor(1, 1, 1, 1) -- Cor branca para o balão
-                love.graphics.draw(balloonImage, balloonX, balloonY)
-                
-                -- Configurar texto
-                love.graphics.setFont(fontSmaller)
-                love.graphics.setColor(0, 0, 0, 1) -- Cor preta para o texto
-                
-                -- Posição do texto dentro do balão (ajustada para ficar centralizada)
-                local textX = balloonX + 20
-                local textY = balloonY + 20
-                local textWidth = 110
-                
-                -- Desenhar o texto do diálogo
-                love.graphics.printf(npc.dialogues[npc.currentDialogue], textX, textY, textWidth, "center")
-                
-                -- Resetar cor
-                love.graphics.setColor(1, 1, 1, 1)
+               DrawBalloon(npc)
+	       DrawText(npc)
             end
 
             if showInteractionMessage then
@@ -615,37 +597,10 @@ function love.draw()
             npcAlbini.animation:draw(npcAlbini.spriteSheet, npcAlbini.x, npcAlbini.y, nil, 5, nil, 6, 9)
 
 	    if npcAlbini.showDialogue then
-                -- Calcular posição do balão relativa ao NPC
-                local balloonX = npcAlbini.x - 70
-                local balloonY = npcAlbini.y - 130
-		-- novo npc x = 1708 e y = 1745
-                -- Desenhar o balão
-                love.graphics.setColor(1, 1, 1, 1) -- Cor branca para o balão
-                love.graphics.draw(balloonImage, balloonX, balloonY)
-
-                -- Configurar texto
-                love.graphics.setFont(fontSmaller)
-                love.graphics.setColor(0, 0, 0, 1) -- Cor preta para o texto
-
-                -- Posição do texto dentro do balão (ajustada para ficar centralizada)
-                local textX = balloonX + 20
-                local textY = balloonY + 20
-                local textWidth = 110
-
-                -- Desenhar o texto do diálogo
-               love.graphics.printf(npcAlbini.dialogues[npcAlbini.currentDialogue], textX, textY, textWidth, "center")
-
-                -- Resetar cor
-                love.graphics.setColor(1, 1, 1, 1)
+                DrawBalloon(npcAlbini)
+		DrawText(npcAlbini)
             end
-                -- Posição da mensagem em relação ao jogador
-                local messageX = npcAlbini.x -30 
-                local messageY = npcAlbini.y - 60
-
-                love.graphics.setFont(fontSmall)
-                love.graphics.setColor(0, 0, 0, 1) -- Cor preta
-                love.graphics.setColor(1, 1, 1, 1) -- Resetando cor para branco
-
+             
 	    -- Desenhar todos os numeros "0" e "1"
             for i, number in ipairs(numbers) do 
 	        if number.num == 0 then 
@@ -690,7 +645,7 @@ local function isGateAtCorrectPosition(gate, destination)
     return math.abs(gate.x - destination.x) < tolerance and math.abs(gate.y - destination.y) < tolerance
 end
 
--- Função para checar se todas as portas lógicas estão posicionadas no lugar correto
+-- Função para checar se todas as portas lógicas / binários estão posicionadas no lugar correto
 -- Se estiverem, então a próxima ação será desbloqueada
 local function checkGatePositions()
     if currentMap == "level1" then
@@ -777,10 +732,16 @@ function love.keypressed(key)
  
     if key == 'b' then -- Botão para comprar binários
         if currentMap == "level3" then
-	    if RealeseBinary then
-                if isNearNPC() then 
-                    DrawBinary  = true 
-	        end
+            if isNearNPC() then
+		if RealeseBinary then
+                    DrawBinary  = true
+		    npcAlbini.currentDialogue = #npcAlbini.dialogues -1
+		    -- "Compra realizada com sucesso"
+		else 
+                    npcAlbini.currentDialogue = #npcAlbini.dialogues
+		    -- "Compra negada. Colete todas as moedas"
+		    -- Adicionar efeito
+		end
 	     end
 	end
     end
@@ -793,10 +754,12 @@ function love.keypressed(key)
                 if npc.currentDialogue > #npc.dialogues then
                     npc.currentDialogue = 1 -- Volta para o primeiro diálogo
                 end
-		npcAlbini.currentDialogue = npcAlbini.currentDialogue + 1
-		if npcAlbini.currentDialogue > #npcAlbini.dialogues then
-                    npcAlbini.currentDialogue = 1 -- Volta para o primeiro diálogo
-                end
+		if currentMap == "level3" then 
+		    npcAlbini.currentDialogue = npcAlbini.currentDialogue + 1
+		    if npcAlbini.currentDialogue > #npcAlbini.dialogues - 2 then
+                        npcAlbini.currentDialogue = 1 -- Volta para o primeiro diálogo
+                    end
+		end
 
                 sounds.blip:play() -- Som de interação
                 return -- Sai da função para não executar outras interações
@@ -886,7 +849,7 @@ end
 function isClose(ObjX, ObjY)
     local playerX, playerY = player.x, player.y  -- Posições do jogador
     
-    if math.abs(playerX - ObjX) < 95 and math.abs(playerY - ObjY) < 95 then
+    if math.abs(playerX - ObjX) < 70 and math.abs(playerY - ObjY) < 95 then
 	return true
     end
     return false
@@ -926,9 +889,19 @@ end
 -- Função para verificar proximidade com o NPC
 function isNearNPC()
     local playerX, playerY = player.x, player.y
-    local distance = math.sqrt((playerX - npc.x)^2 + (playerY - npc.y)^2)
-    local distance2 = math.sqrt((playerX - npcAlbini.x)^2 + (playerY - npcAlbini.y)^2)
-    return (distance < 80 or  distance2 < 80) -- Retorna true se estiver próximo o suficiente
+    local distance = nil
+
+    if currentMap == "mainMap" then 
+        distance = math.sqrt((playerX - npc.x)^2 + (playerY - npc.y)^2)    
+    elseif currentMap == "level3" then
+	distance = math.sqrt((playerX - npcAlbini.x)^2 + (playerY - npcAlbini.y)^2) 
+    end
+
+    if distance then 
+        return (distance < 80) -- Retorna true se estiver próximo o suficiente
+    else 
+	return false
+    end
 end
 
 -- Função para desenhar moedas
@@ -946,6 +919,46 @@ function clearColliders()
         wall:destroy() 
     end
     walls = {}
+end
+
+-- Função para calcular posição do balão relativa ao NPC
+function DrawBalloon(npc)
+    local balloonX = npc.x - 70
+    local balloonY = npc.y - 130
+    -- novo npc x = 1708 e y = 1700
+    -- Desenhar o balão
+    love.graphics.setColor(1, 1, 1, 1) -- Cor branca para o balão
+    love.graphics.draw(balloonImage, balloonX, balloonY)
+end
+
+--[[ Função para calcular posição do texto dentro do 
+balão (ajustada para ficar centralizada) e desenhar a 
+mensagem ]]--
+function DrawText(npc)
+    -- Configurar texto
+    love.graphics.setFont(fontSmaller)
+    love.graphics.setColor(0, 0, 0, 1) -- Cor preta para o texto
+
+    local balloonX = npc.x - 70
+    local balloonY = npc.y - 130
+
+    -- Posição do texto dentro do balão (ajustada para ficar centralizada)
+    local textX = balloonX + 20
+    local textY = balloonY + 20
+    local textWidth = 110
+
+    -- Desenhar o texto do diálogo
+    love.graphics.printf(npc.dialogues[npc.currentDialogue], textX, textY, textWidth, "center")
+
+    -- Resetar cor
+    love.graphics.setColor(1, 1, 1, 1)
+    -- Posição da mensagem em relação ao jogador
+    local messageX = npc.x -30
+    local messageY = npc.y - 60
+
+    love.graphics.setFont(fontSmall)
+    love.graphics.setColor(0, 0, 0, 1) -- Cor preta
+    love.graphics.setColor(1, 1, 1, 1) -- Resetando cor para branco
 end
 
 -- Função para carregar as colisões de determinados mapas (níveis diferentes, mapas diferentes)
