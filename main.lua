@@ -306,7 +306,7 @@ function love.load()
     CoinframeHeight = CoinSprite:getHeight()
     CoinGrid = anim8.newGrid(CoinframeWidth, CoinframeHeight, CoinSprite:getWidth(), CoinSprite:getHeight())
     CoinAnim = anim8.newAnimation(CoinGrid('1-12', 1), 0.1)
-    print("CoinSprite size:", CoinSprite:getWidth(), CoinSprite:getHeight())
+    --print("CoinSprite size:", CoinSprite:getWidth(), CoinSprite:getHeight())
 
     --[[ Binários só aparecem no jogo após coletar todas as moedas 
     e comprá-los com o NPC ]] --
