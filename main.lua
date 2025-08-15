@@ -80,19 +80,19 @@ local chairs = {
 
 -- Posição das moedas no level3
 local coins = {
-    {x = 294, y = 971, Collect = false},
-    {x = 600, y = 1430, Collect = false},
-    {x = 1735, y = 714, Collect = false},
-    {x = 1056, y = 27, Collect = false}
+    {x = 270, y = 971, Collect = false},
+    {x = 580, y = 1430, Collect = false},
+    {x = 1715, y = 714, Collect = false},
+    {x = 1036, y = 27, Collect = false}
 }
 
 --[[ Posição dos números em bináro e seu valor. 
 --Após comprar os binários '0' ou '1' se aparecerem no jogo ]]--
 local numbers = {
-    { x = 550, y = 390, num = nil },
-    { x = 750, y = 390, num = nil },
-    { x = 940, y = 390, num = nil },
-    { x = 1140, y = 390, num = nil }
+    { x = 640, y = 460, num = nil },
+    { x = 830, y = 460, num = nil },
+    { x = 1025, y = 460, num = nil },
+    { x = 1215, y = 460, num = nil }
 }
 
 CorrectNumber = { 1, 0, 1, 1}
@@ -301,8 +301,13 @@ function love.load()
     npcAlbini.grid = anim8.newGrid(12, 18, npcAlbini.spriteSheet:getWidth(), npcAlbini.spriteSheet:getHeight())
     npcAlbini.animation = anim8.newAnimation(npcAlbini.grid('2-2', 3), 1) -- Frame parado olhando para direita
 
-    coinImage = love.graphics.newImage('maps/Texture/coin.png') -- Carregando as moedas
-    
+    CoinSprite = love.graphics.newImage('sprites/coin-sheet.png') -- Carregando as moedas
+    CoinframeWidth = CoinSprite:getWidth() / 12
+    CoinframeHeight = CoinSprite:getHeight()
+    CoinGrid = anim8.newGrid(CoinframeWidth, CoinframeHeight, CoinSprite:getWidth(), CoinSprite:getHeight())
+    CoinAnim = anim8.newAnimation(CoinGrid('1-12', 1), 0.1)
+    print("CoinSprite size:", CoinSprite:getWidth(), CoinSprite:getHeight())
+
     --[[ Binários só aparecem no jogo após coletar todas as moedas 
     e comprá-los com o NPC ]] --
     DrawBinary = false 
@@ -483,6 +488,10 @@ function love.update(dt)
         cam.y = (mapH - h/2)
     end
 
+    if currentMap == "level3" then 
+        CoinAnim:update(dt)
+    end
+
 end
 
 --[[ Essa é a última função principal: love.draw().
@@ -585,8 +594,8 @@ function love.draw()
             for i, coin in ipairs(coins) do
                 RealeseBinary = false 
 		if not coin.Collect then
-                    love.graphics.draw(coinImage, coin.x, coin.y)
-	    	    if isClose(coin.x, coin.y) then 
+                    CoinAnim:draw(CoinSprite, coin.x, coin.y, 0, 3, 3, 8, 8)
+		    if isClose(coin.x, coin.y, "COIN") then 
 		        coin.Collect = true
 		    end
 		else RealeseBinary = true
@@ -604,9 +613,9 @@ function love.draw()
 	    -- Desenhar todos os numeros "0" e "1"
             for i, number in ipairs(numbers) do 
 	        if number.num == 0 then 
-                    love.graphics.draw(number0Texture, number.x, number.y)
+                    love.graphics.draw(number0Texture, number.x, number.y, 0, 1, 1 , 64, 64)
 		elseif number.num == 1 then 
-		    love.graphics.draw(number1Texture, number.x, number.y)
+		    love.graphics.draw(number1Texture, number.x, number.y, 0, 1, 1 , 64, 64 )
 		end
 	    end
 
@@ -804,7 +813,7 @@ function love.keypressed(key)
             end
 	    if currentMap == "level3" then
                 for i, number in ipairs(numbers) do
-                    if isClose (number.x, number.y) then 
+                    if isClose (number.x, number.y, "NUMBER") then 
 		    -- Testa proximidade com o local dos números
                         if DrawBinary then 
                             if number.num == nil then
@@ -846,10 +855,15 @@ function isNearGate(gate)
 end
 
 -- Função para verificar proximidade com as moedas/Objetos/posições
-function isClose(ObjX, ObjY)
+function isClose(ObjX, ObjY, OBJ)
     local playerX, playerY = player.x, player.y  -- Posições do jogador
-    
-    if math.abs(playerX - ObjX) < 70 and math.abs(playerY - ObjY) < 95 then
+    local tolerance = 80
+
+    if OBJ == "COIN" then 
+        tolerance = 30
+    end 
+
+    if math.abs(playerX - ObjX) < tolerance and math.abs(playerY - ObjY) < tolerance then
 	return true
     end
     return false
@@ -908,7 +922,7 @@ end
 function DrawCoins()
     for i, coin in ipairs(coins) do
         if not coin.CollectCoin then 
-	    love.graphics.draw(coinImage, coin.x, coin.y)	
+	    CoinAnim:draw(CoinSprite, coin.x, coin.y, 0, 3, 3, 8, 8)	
         end
     end
 end
