@@ -745,9 +745,11 @@ function love.keypressed(key)
 		if RealeseBinary then
                     DrawBinary  = true
 		    npcAlbini.currentDialogue = #npcAlbini.dialogues -1
+		    sounds.blip:play()
 		    -- "Compra realizada com sucesso"
 		else 
                     npcAlbini.currentDialogue = #npcAlbini.dialogues
+		    sounds.blip:play()
 		    -- "Compra negada. Colete todas as moedas"
 		    -- Adicionar efeito
 		end
