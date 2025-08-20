@@ -89,14 +89,41 @@ local coins = {
 
 --[[ Posição dos números em bináro e seu valor. 
 --Após comprar os binários '0' ou '1' se aparecerem no jogo ]]--
-local numbers = {
+local numberStage3 = {
     { x = 640, y = 460, num = nil },
     { x = 830, y = 460, num = nil },
     { x = 1025, y = 460, num = nil },
     { x = 1215, y = 460, num = nil }
 }
 
-CorrectNumber = { 1, 0, 1, 1}
+CorrectNumberStage3 = { 1, 0, 1, 1}
+
+local numberStage4N = {
+    { x = 572, y = 520, num = nil },
+    { x = 772, y = 520, num = nil },
+    { x = 962, y = 520, num = nil },
+    { x = 1146, y = 520, num = nil }
+}
+
+local CorrectNumberStage4N = { 0, 1, 1, 0} -- 6 
+
+local numberStage4C1 = {
+    { x = 572, y = 845, num = nil },
+    { x = 772, y = 845, num = nil },
+    { x = 962, y = 845, num = nil },
+    { x = 1146, y = 845, num = nil }
+}
+
+local CorrectNumberStage4C1 = { 1, 0, 0, 1}
+
+local numberStage4C2 = {
+    { x = 572, y = 1236, num = nil },
+    { x = 772, y = 1236, num = nil },
+    { x = 962, y = 1236, num = nil },
+    { x = 1146, y = 1236, num = nil }
+}
+
+local CorrectNumberStage4C2 = { 1, 0, 1, 0}
 
 local previousPlayerX, previousPlayerY
 
@@ -613,15 +640,9 @@ function love.draw()
                 DrawBalloon(npcAlbini)
 		DrawText(npcAlbini)
             end
-             
+            
+	    DrawNumber(numberStage3)
 	    -- Desenhar todos os numeros "0" e "1"
-            for i, number in ipairs(numbers) do 
-	        if number.num == 0 then 
-                    love.graphics.draw(number0Texture, number.x, number.y, 0, 1, 1 , 64, 64)
-		elseif number.num == 1 then 
-		    love.graphics.draw(number1Texture, number.x, number.y, 0, 1, 1 , 64, 64 )
-		end
-	    end
 
             player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, nil, 6, 9) --desenhando o boneco
             --world:draw()
@@ -632,8 +653,12 @@ function love.draw()
         cam:attach()
             level4Map:drawLayer(level4Map.layers["Ground"]) --desenhando chão
             level4Map:drawLayer(level4Map.layers["Number"]) --desenhando o números
-            -- Desenhar os binários
-
+            
+	    -- Desenhar os binários
+            DrawNumber(numberStage4N) -- Binário Normal
+	    DrawNumber(numberStage4C1) -- Binário Complemento de 1
+	    DrawNumber(numberStage4C2) -- Binário Complemento de 2
+	
             player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, nil, 6, 9) --desenhando o boneco
             --world:draw()
         cam:detach()
@@ -697,7 +722,7 @@ local function checkGatePositions()
     end
 
      if currentMap == "level3" then
-        if numberRightPlace() then
+        if numberRightPlace(numberStage3, CorrectNumberStage3) then
             -- Números estão na ordem correta, vá para o mapa principal
             interactionStates.level3 = false
             changeGameState("running")
@@ -708,7 +733,9 @@ local function checkGatePositions()
     end
 
     if currentMap == "level4" then
-        if numberRightPlace() then
+        if numberRightPlace(numberStage4N, CorrectNumberStage4N) and
+	   numberRightPlace(numberStage4C1, CorrectNumberStage4C1) and
+	   numberRightPlace(numberStage4C2, CorrectNumberStage4C2) then
             -- Números estão na ordem correta, vá para o mapa principal
             interactionStates.level4 = false
             changeGameState("running")
@@ -842,20 +869,16 @@ function love.keypressed(key)
                 checkGatePositions()
             end
 	    if currentMap == "level3" then
-                for i, number in ipairs(numbers) do
-                    if isClose (number.x, number.y, "NUMBER") then 
-		    -- Testa proximidade com o local dos números
-                        if DrawBinary then 
-                            if number.num == nil then
-                                number.num = 0
-                            elseif number.num == 0 then
-                                number.num = 1
-                            else number.num = 0
-                            end
-                         end
-                     end
-                 end
-		 checkGatePositions()
+		ChangeNumber(numberStage3)
+		--[[ Substitui o número desenhado quando a tecla "e" é pressionada
+		 e está próximo a posição do número ]]--
+		checkGatePositions()
+	    end
+	    if currentMap == "level4" then 
+            	ChangeNumber(numberStage4N)
+		ChangeNumber(numberStage4C1)
+		ChangeNumber(numberStage4C2)
+		checkGatePositions()
 	    end
         end
     end
@@ -900,13 +923,48 @@ function isClose(ObjX, ObjY, OBJ)
 end
 
 -- Função para verificar se os números estão na posição correta
-function numberRightPlace()
+function numberRightPlace(numbers, CorrectNumber)
     for i, number in ipairs(numbers) do
         if number.num ~= CorrectNumber[i] then
             return false
         end
     end 
     return true 
+end
+
+-- Função para mudar o número desenhado quando a tecla "e" é apertada
+function ChangeNumber(numbers)
+    if currentMap == "level3" then 
+        isPossibleDraw = DrawBinary --[[ Na fase 3 é preciso comprar 
+        os binários para estarem disponíveis para uso/desenho ]]--
+    else isPossibleDraw = true
+    end
+    
+    for i, number in ipairs(numbers) do
+        if isClose (number.x, number.y, "NUMBER") then
+        -- Testa proximidade com o local dos números
+            if isPossibleDraw then 
+	        if number.num == nil then
+                    number.num = 0
+                elseif number.num == 0 then --Substitui o número
+                    number.num = 1
+                else number.num = 0
+                end
+            end
+	end
+    end
+end    
+
+-- Função para desenhar os números 
+function DrawNumber(numbers)
+    -- Desenhar todos os numeros "0" e "1"
+            for i, number in ipairs(numbers) do
+                if number.num == 0 then
+                    love.graphics.draw(number0Texture, number.x, number.y, 0, 1, 1 , 64, 64)
+                elseif number.num == 1 then
+                    love.graphics.draw(number1Texture, number.x, number.y, 0, 1, 1 , 64, 64 )
+                end
+            end
 end
 
 -- Função para verificar proximidade do objeto de interação
