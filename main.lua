@@ -75,7 +75,8 @@ local gateDestinations = {
 local chairs = {
     {x = 64, y = 896},
     {x = 1766, y = 1489},
-    {x = 1766, y = 1766}
+    {x = 1766, y = 1766},
+    {x = 517, y = 1819},	
 }
 
 -- Posição das moedas no level3
@@ -103,6 +104,7 @@ local interactionStates = {
     level1 = true,
     level2 = true,
     level3 = true,
+    level4 = true,
 }
 
 -- Mensagem 1 do tutorial
@@ -225,6 +227,8 @@ function love.load()
     level1Map = sti('maps/level1.lua')
     level2Map = sti('maps/level2.lua')
     level3Map = sti('maps/level3.lua')
+    level4Map = sti('maps/level4.lua')
+
     -- Texturas
     andGateTexture = love.graphics.newImage('maps/Texture/andlogic.png')
     orGateTexture = love.graphics.newImage('maps/Texture/orlogic.png')
@@ -624,6 +628,17 @@ function love.draw()
         cam:detach()
     end
 
+    if currentMap == "level4" then
+        cam:attach()
+            level4Map:drawLayer(level4Map.layers["Ground"]) --desenhando chão
+            level4Map:drawLayer(level4Map.layers["Number"]) --desenhando o números
+            -- Desenhar os binários
+
+            player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, nil, 6, 9) --desenhando o boneco
+            --world:draw()
+        cam:detach()
+    end
+
 
     if game.state["menu"] then
         menuMap:drawLayer(menuMap.layers["default"])
@@ -685,6 +700,17 @@ local function checkGatePositions()
         if numberRightPlace() then
             -- Números estão na ordem correta, vá para o mapa principal
             interactionStates.level3 = false
+            changeGameState("running")
+            clearColliders()
+            loadMapCollisions(gameMap)
+            currentMap = "mainMap"
+        end
+    end
+
+    if currentMap == "level4" then
+        if numberRightPlace() then
+            -- Números estão na ordem correta, vá para o mapa principal
+            interactionStates.level4 = false
             changeGameState("running")
             clearColliders()
             loadMapCollisions(gameMap)
@@ -780,15 +806,17 @@ function love.keypressed(key)
             if nearbyChair then
                 -- Salva a posição atual do jogador
                 previousPlayerX, previousPlayerY = player.x, player.y
-                
-                -- Verifica qual cadeira está perto e muda o mapa de acordo
+               
+		-- Verifica qual cadeira está perto e muda o mapa de acordo
                 if nearbyChair == 1 then
                     currentMap = "level1"
                 elseif nearbyChair == 2 then
                     currentMap = "level2"
 	        elseif nearbyChair == 3 then 
 		    currentMap = "level3"
-	    	end
+	        elseif nearbyChair == 4 then 
+		    currentMap = "level4"
+	        end
                 -- Limpa e carrega as colisões do novo mapa
                 clearColliders()
                 loadMapCollisions(currentMap)
@@ -895,7 +923,9 @@ function isNearInteractionObject()
                 return true, i
 	    elseif i == 3 and interactionStates.level3 then 
 		return true, i
-            end
+	    elseif i == 4 and interactionStates.level4 then
+		return true, i
+	    end
         end
     end
 
