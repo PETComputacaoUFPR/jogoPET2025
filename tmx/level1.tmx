@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="30" height="30" tilewidth="64" tileheight="64" infinite="0" nextlayerid="10" nextobjectid="80">
+<map version="1.10" tiledversion="1.11.1-99-gec89c545" orientation="orthogonal" renderorder="right-down" width="30" height="30" tilewidth="64" tileheight="64" infinite="0" nextlayerid="12" nextobjectid="83">
  <editorsettings>
   <export target="../maps/level1.lua" format="lua"/>
  </editorsettings>
  <tileset firstgid="1" name="test-tiled" tilewidth="64" tileheight="64" tilecount="54" columns="9">
-  <image source="../maps/tileset.png" width="576" height="384"/>
+  <image source="../maps/Texture/tileset.png" width="576" height="384"/>
  </tileset>
  <tileset firstgid="55" name="TX Tileset Stone Ground" tilewidth="64" tileheight="64" tilecount="16" columns="4">
   <image source="../maps/Texture/TX Tileset Stone Ground.png" width="256" height="256"/>
@@ -13,14 +13,20 @@
   <image source="../maps/Texture/TX Tileset Grass.png" width="256" height="256"/>
  </tileset>
  <tileset firstgid="87" name="pixil-frame-0" tilewidth="64" tileheight="64" tilecount="4" columns="2">
-  <image source="../maps/andlogic.png" width="190" height="162"/>
+  <image source="../maps/Texture/andlogic.png" width="190" height="162"/>
  </tileset>
  <tileset firstgid="91" name="abcd" tilewidth="64" tileheight="64" tilecount="209" columns="19">
-  <image source="../maps/abcd.png" width="1248" height="712"/>
+  <image source="../maps/Texture/abcd.png" width="1248" height="712"/>
  </tileset>
  <tileset firstgid="300" name="a_b" tilewidth="64" tileheight="64" tilecount="209" columns="19">
-  <image source="../maps/a_b.png" width="1248" height="712"/>
+  <image source="../maps/Texture/a_b.png" width="1248" height="712"/>
  </tileset>
+ <tileset firstgid="509" name="door" tilewidth="64" tileheight="64" tilecount="2" columns="2">
+  <image source="../maps/Texture/door.png" trans="ff00ff" width="156" height="89"/>
+ </tileset>
+ <objectgroup id="11" name="Walls">
+  <object id="82" x="124" y="970" width="52" height="66"/>
+ </objectgroup>
  <layer id="1" name="Ground" width="30" height="30">
   <data encoding="csv">
 71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,
@@ -72,7 +78,7 @@
 0,0,0,0,0,0,0,0,0,0,134,135,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,509,510,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
