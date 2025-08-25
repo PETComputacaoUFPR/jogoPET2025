@@ -73,9 +73,9 @@ local gateDestinations = {
 }
 
 local chairs = {
-    {x = 84, y = 910, map = "level1", collisionMap = level1Map},
-    {x = 1806, y = 1484, map = "level2", collisionMap = level2Map},
-    {x = 1806, y = 1808, map = "level3", collisionMap = level3Map},
+    {x = 85, y = 920, map = "level1", collisionMap = level1Map},
+    {x = 1806, y = 1500, map = "level2", collisionMap = level2Map},
+    {x = 1806, y = 1820, map = "level3", collisionMap = level3Map},
     {x = 537, y = 1873, map = "level4", collisionMap = level4Map},	
 }
 
@@ -962,17 +962,19 @@ end
 function isNearInteractionObject()
     local playerX, playerY = player.x, player.y  -- Posições do jogador
 
-    -- Verifica se o jogador está perto de qualquer cadeira e retorna o índice
-    for i, chair in ipairs(chairs) do
-        if math.abs(playerX - chair.x) < 95 and math.abs(playerY - chair.y) < 95 then
-            -- Verifica se o nível correspondente está ativo
-            if interactionStates[chair.map] then 
-               return true, i 
-	         end
-        end
-    end
+   -- Verifica se o jogador está perto de qualquer cadeira e retorna o índice
 
-    return false -- Se não estiver perto de nenhuma cadeira, retorna falso
+   for i, chair in ipairs(chairs) do
+      -- A distância é baseada em uma circuferência de raio 83
+      if math.sqrt((playerX - chair.x)^2 + (playerY - chair.y)^2) < 83 then
+      -- Verifica se o nível correspondente está ativo
+         if interactionStates[chair.map] then
+            return true, i
+         end
+      end
+   end
+
+   return false -- Se não estiver perto de nenhuma cadeira, retorna falso
 end
 
 -- Função para mudar de mapa e carregar colisão
