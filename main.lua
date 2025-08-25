@@ -73,10 +73,10 @@ local gateDestinations = {
 }
 
 local chairs = {
-    {x = 64, y = 896, map = "level1", collisionMap = level4Map},
-    {x = 1766, y = 1489, map = "level2", collisionMap = level4Map},
-    {x = 1766, y = 1766, map = "level3", collisionMap = level4Map},
-    {x = 517, y = 1819, map = "level4", collisionMap = level4Map},	
+    {x = 84, y = 910, map = "level1", collisionMap = level1Map},
+    {x = 1806, y = 1484, map = "level2", collisionMap = level2Map},
+    {x = 1806, y = 1808, map = "level3", collisionMap = level3Map},
+    {x = 537, y = 1873, map = "level4", collisionMap = level4Map},	
 }
 
 -- Posição das moedas no level3
