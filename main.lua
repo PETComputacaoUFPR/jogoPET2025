@@ -73,9 +73,10 @@ local gateDestinations = {
 }
 
 local chairs = {
-    {x = 64, y = 896},
-    {x = 1766, y = 1489},
-    {x = 1766, y = 1766}
+    {x = 85, y = 920, map = "level1", collisionMap = level1Map},
+    {x = 1806, y = 1500, map = "level2", collisionMap = level2Map},
+    {x = 1806, y = 1820, map = "level3", collisionMap = level3Map},
+    {x = 537, y = 1873, map = "level4", collisionMap = level4Map},	
 }
 
 -- Posição das moedas no level3
@@ -88,14 +89,41 @@ local coins = {
 
 --[[ Posição dos números em bináro e seu valor. 
 --Após comprar os binários '0' ou '1' se aparecerem no jogo ]]--
-local numbers = {
+local numberStage3 = {
     { x = 640, y = 460, num = nil },
     { x = 830, y = 460, num = nil },
     { x = 1025, y = 460, num = nil },
     { x = 1215, y = 460, num = nil }
 }
 
-CorrectNumber = { 1, 0, 1, 1}
+CorrectNumberStage3 = { 1, 0, 1, 1}
+
+local numberStage4N = {
+    { x = 572, y = 520, num = nil },
+    { x = 772, y = 520, num = nil },
+    { x = 962, y = 520, num = nil },
+    { x = 1146, y = 520, num = nil }
+}
+
+local CorrectNumberStage4N = { 0, 1, 1, 0} -- 6 
+
+local numberStage4C1 = {
+    { x = 572, y = 845, num = nil },
+    { x = 772, y = 845, num = nil },
+    { x = 962, y = 845, num = nil },
+    { x = 1146, y = 845, num = nil }
+}
+
+local CorrectNumberStage4C1 = { 1, 0, 0, 1}
+
+local numberStage4C2 = {
+    { x = 572, y = 1236, num = nil },
+    { x = 772, y = 1236, num = nil },
+    { x = 962, y = 1236, num = nil },
+    { x = 1146, y = 1236, num = nil }
+}
+
+local CorrectNumberStage4C2 = { 1, 0, 1, 0}
 
 local previousPlayerX, previousPlayerY
 
@@ -103,6 +131,7 @@ local interactionStates = {
     level1 = true,
     level2 = true,
     level3 = true,
+    level4 = true,
 }
 
 -- Mensagem 1 do tutorial
@@ -135,13 +164,13 @@ local npcAlbini = {
     grid = nil,
     animation = nil,
     dialogues = {
-        "Ola! Voce usara complemento de 1!",
-        "Troque os numeros 1 por 0 e vice-versa",
-	"Aperte 'b' e compre seus binarios",
-	"Escreva 4 em binário",
-        "Agora transforme 4 para -4",
-	"Compra realizada com sucesso",
-	"Compra negada. Colete todas as moedas"
+      "Ola! Voce usara complemento de 1!",
+      "Troque os numeros 1 por 0 e vice-versa",
+      "Aperte 'b' e compre seus binarios",
+	   "Escreva 4 em binário",
+      "Agora transforme 4 para -4",
+      "Compra realizada com sucesso",
+      "Compra negada. Colete todas as moedas"
     },
     currentDialogue = 1,
     showDialogue = false
@@ -225,6 +254,8 @@ function love.load()
     level1Map = sti('maps/level1.lua')
     level2Map = sti('maps/level2.lua')
     level3Map = sti('maps/level3.lua')
+    level4Map = sti('maps/level4.lua')
+
     -- Texturas
     andGateTexture = love.graphics.newImage('maps/Texture/andlogic.png')
     orGateTexture = love.graphics.newImage('maps/Texture/orlogic.png')
@@ -527,7 +558,7 @@ function love.draw()
             -- Mostrar diálogo do NPC se estiver próximo
             if npc.showDialogue then
                DrawBalloon(npc)
-	       DrawText(npc)
+	            DrawText(npc)
             end
 
             if showInteractionMessage then
@@ -586,39 +617,47 @@ function love.draw()
     
     if currentMap == "level3" then
         cam:attach()
-
- 	    level3Map:drawLayer(level3Map.layers["Ground"]) --desenhando chão
-	    level3Map:drawLayer(level3Map.layers["letters"]) --desenhando o puzzle
+            level3Map:drawLayer(level3Map.layers["Ground"]) --desenhando chão
+	         level3Map:drawLayer(level3Map.layers["letters"]) --desenhando o puzzle
 	    
-	    -- Desenhar moedas e apagá-las ao passar com o player por cima
+	         -- Desenhar moedas e apagá-las ao passar com o player por cima
             for i, coin in ipairs(coins) do
                 RealeseBinary = false 
-		if not coin.Collect then
-                    CoinAnim:draw(CoinSprite, coin.x, coin.y, 0, 3, 3, 8, 8)
-		    if isClose(coin.x, coin.y, "COIN") then 
-		        coin.Collect = true
-		    end
-		else RealeseBinary = true
-	        end	
-	    end
-     		
-	    -- Desenhar NPC
+		            if not coin.Collect then
+                     CoinAnim:draw(CoinSprite, coin.x, coin.y, 0, 3, 3, 8, 8)
+		                  if isClose(coin.x, coin.y, "COIN") then 
+		                     coin.Collect = true
+		                  end
+		            else RealeseBinary = true
+	               end	
+	         end
+	   
+            -- Desenhar NPC
             npcAlbini.animation:draw(npcAlbini.spriteSheet, npcAlbini.x, npcAlbini.y, nil, 5, nil, 6, 9)
 
-	    if npcAlbini.showDialogue then
-                DrawBalloon(npcAlbini)
-		DrawText(npcAlbini)
+            if npcAlbini.showDialogue then
+               DrawBalloon(npcAlbini)
+		         DrawText(npcAlbini)
             end
-             
-	    -- Desenhar todos os numeros "0" e "1"
-            for i, number in ipairs(numbers) do 
-	        if number.num == 0 then 
-                    love.graphics.draw(number0Texture, number.x, number.y, 0, 1, 1 , 64, 64)
-		elseif number.num == 1 then 
-		    love.graphics.draw(number1Texture, number.x, number.y, 0, 1, 1 , 64, 64 )
-		end
-	    end
+            
+            -- Desenhar todos os numeros "0" e "1"
+	         DrawNumber(numberStage3)
 
+            player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, nil, 6, 9) --desenhando o boneco
+            --world:draw()
+        cam:detach()
+    end
+
+    if currentMap == "level4" then
+        cam:attach()
+            level4Map:drawLayer(level4Map.layers["Ground"]) --desenhando chão
+            level4Map:drawLayer(level4Map.layers["Number"]) --desenhando o números
+            
+	         -- Desenhar os binários
+            DrawNumber(numberStage4N) -- Binário Normal
+	         DrawNumber(numberStage4C1) -- Binário Complemento de 1
+	         DrawNumber(numberStage4C2) -- Binário Complemento de 2
+	
             player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, nil, 6, 9) --desenhando o boneco
             --world:draw()
         cam:detach()
@@ -682,9 +721,22 @@ local function checkGatePositions()
     end
 
      if currentMap == "level3" then
-        if numberRightPlace() then
+        if numberRightPlace(numberStage3, CorrectNumberStage3) then
             -- Números estão na ordem correta, vá para o mapa principal
             interactionStates.level3 = false
+            changeGameState("running")
+            clearColliders()
+            loadMapCollisions(gameMap)
+            currentMap = "mainMap"
+        end
+    end
+
+    if currentMap == "level4" then
+        if numberRightPlace(numberStage4N, CorrectNumberStage4N) and
+            numberRightPlace(numberStage4C1, CorrectNumberStage4C1) and
+	         numberRightPlace(numberStage4C2, CorrectNumberStage4C2) then
+            -- Números estão na ordem correta, vá para o mapa principal
+            interactionStates.level4 = false
             changeGameState("running")
             clearColliders()
             loadMapCollisions(gameMap)
@@ -742,56 +794,53 @@ function love.keypressed(key)
     if key == 'b' then -- Botão para comprar binários
         if currentMap == "level3" then
             if isNearNPC() then
-		if RealeseBinary then
-                    DrawBinary  = true
-		    npcAlbini.currentDialogue = #npcAlbini.dialogues -1
-		    -- "Compra realizada com sucesso"
-		else 
-                    npcAlbini.currentDialogue = #npcAlbini.dialogues
-		    -- "Compra negada. Colete todas as moedas"
-		    -- Adicionar efeito
-		end
-	     end
-	end
+		         if RealeseBinary then
+                  DrawBinary  = true
+                  npcAlbini.currentDialogue = #npcAlbini.dialogues -1
+                  sounds.blip:play()
+                  -- "Compra realizada com sucesso"
+		         else 
+                  npcAlbini.currentDialogue = #npcAlbini.dialogues
+		            sounds.blip:play()
+		            -- "Compra negada. Colete todas as moedas"
+		    		end
+            end
+        end
     end
 
     if key == 'e' then
-        if game.state["running"] then
+         if game.state["running"] then
             -- Interação com NPC
             if isNearNPC() then
                 npc.currentDialogue = npc.currentDialogue + 1
                 if npc.currentDialogue > #npc.dialogues then
                     npc.currentDialogue = 1 -- Volta para o primeiro diálogo
                 end
-		if currentMap == "level3" then 
-		    npcAlbini.currentDialogue = npcAlbini.currentDialogue + 1
-		    if npcAlbini.currentDialogue > #npcAlbini.dialogues - 2 then
-                        npcAlbini.currentDialogue = 1 -- Volta para o primeiro diálogo
-                    end
-		end
+		         if currentMap == "level3" then 
+		            npcAlbini.currentDialogue = npcAlbini.currentDialogue + 1
+		            if npcAlbini.currentDialogue > #npcAlbini.dialogues - 2 then
+                     npcAlbini.currentDialogue = 1 -- Volta para o primeiro diálogo
+                  end
+		         end
+            sounds.blip:play() -- Som de interação
+            return -- Sai da função para não executar outras interações
+         end
+            
+         local bool, nearbyChair = isNearInteractionObject()
+            if bool then
+               -- Salva a posição atual do jogador
+               previousPlayerX, previousPlayerY = player.x, player.y
+               
+               local chairMap = chairs[nearbyChair].map
+               -- Verifica qual cadeira está perto e muda o mapa de acordo
 
-                sounds.blip:play() -- Som de interação
-                return -- Sai da função para não executar outras interações
+               if currentMap == "mainMap" then
+                  changeMap(chairMap)
+               elseif currentMap == chairMap then 
+                  changeMap("mainMap")
+               end
             end
             
-            local bool, nearbyChair = isNearInteractionObject()
-            if nearbyChair then
-                -- Salva a posição atual do jogador
-                previousPlayerX, previousPlayerY = player.x, player.y
-                
-                -- Verifica qual cadeira está perto e muda o mapa de acordo
-                if nearbyChair == 1 then
-                    currentMap = "level1"
-                elseif nearbyChair == 2 then
-                    currentMap = "level2"
-	        elseif nearbyChair == 3 then 
-		    currentMap = "level3"
-	    	end
-                -- Limpa e carrega as colisões do novo mapa
-                clearColliders()
-                loadMapCollisions(currentMap)
-
-            end
             if currentMap == "level1" then
                 if isNearGate(andGate) then
                     -- Alternar entre pegar e soltar a porta
@@ -811,22 +860,18 @@ function love.keypressed(key)
                 end
                 checkGatePositions()
             end
-	    if currentMap == "level3" then
-                for i, number in ipairs(numbers) do
-                    if isClose (number.x, number.y, "NUMBER") then 
-		    -- Testa proximidade com o local dos números
-                        if DrawBinary then 
-                            if number.num == nil then
-                                number.num = 0
-                            elseif number.num == 0 then
-                                number.num = 1
-                            else number.num = 0
-                            end
-                         end
-                     end
-                 end
-		 checkGatePositions()
-	    end
+	         if currentMap == "level3" then
+		         ChangeNumber(numberStage3)
+		         --[[ Substitui o número desenhado quando a tecla "e" é pressionada
+		         e está próximo a posição do número ]]--
+		         checkGatePositions()
+	         end
+	         if currentMap == "level4" then 
+               ChangeNumber(numberStage4N)
+               ChangeNumber(numberStage4C1)
+               ChangeNumber(numberStage4C2)
+               checkGatePositions()
+	         end
         end
     end
 
@@ -848,9 +893,9 @@ function isNearGate(gate)
     end
 
     -- Verifica se o jogador está próximo da porta
-        if math.abs(playerX - gate.x) < 100 and math.abs(playerY - gate.y) < 100 then
-            return true
-        end
+    if math.abs(playerX - gate.x) < 100 and math.abs(playerY - gate.y) < 100 then
+       return true
+    end
     return false
 end
 
@@ -860,17 +905,17 @@ function isClose(ObjX, ObjY, OBJ)
     local tolerance = 80
 
     if OBJ == "COIN" then 
-        tolerance = 30
+       tolerance = 30
     end 
 
     if math.abs(playerX - ObjX) < tolerance and math.abs(playerY - ObjY) < tolerance then
-	return true
+       return true
     end
     return false
 end
 
 -- Função para verificar se os números estão na posição correta
-function numberRightPlace()
+function numberRightPlace(numbers, CorrectNumber)
     for i, number in ipairs(numbers) do
         if number.num ~= CorrectNumber[i] then
             return false
@@ -879,52 +924,102 @@ function numberRightPlace()
     return true 
 end
 
+-- Função para mudar o número desenhado quando a tecla "e" é apertada
+function ChangeNumber(numbers)
+    if currentMap == "level3" then 
+        isPossibleDraw = DrawBinary --[[ Na fase 3 é preciso comprar 
+        os binários para estarem disponíveis para uso/desenho ]]--
+    else isPossibleDraw = true
+    end
+    
+    for i, number in ipairs(numbers) do
+       if isClose (number.x, number.y, "NUMBER") then
+        -- Testa proximidade com o local dos números
+            if isPossibleDraw then 
+               if number.num == nil then
+                  number.num = 0
+               elseif number.num == 0 then --Substitui o número
+                  number.num = 1
+               else number.num = 0
+               end
+            end
+      end
+    end
+end    
+
+-- Função para desenhar todos os numeros "0" e "1"
+function DrawNumber(numbers)
+   for i, number in ipairs(numbers) do
+      if number.num == 0 then
+         love.graphics.draw(number0Texture, number.x, number.y, 0, 1, 1 , 64, 64)
+      elseif number.num == 1 then
+         love.graphics.draw(number1Texture, number.x, number.y, 0, 1, 1 , 64, 64 )
+      end
+   end
+end
+
 -- Função para verificar proximidade do objeto de interação
 function isNearInteractionObject()
     local playerX, playerY = player.x, player.y  -- Posições do jogador
 
-    -- Verifica se o jogador está perto de qualquer cadeira e retorna o índice
-    for i, chair in ipairs(chairs) do
-        if math.abs(playerX - chair.x) < 95 and math.abs(playerY - chair.y) < 95 then
-            -- Verifica se o nível correspondente está ativo
-            if i == 1 and interactionStates.level1 then
-                return true, i
-            elseif i == 2 and interactionStates.level2 then
-                return true, i
-	    elseif i == 3 and interactionStates.level3 then 
-		return true, i
-            end
-        end
-    end
+   -- Verifica se o jogador está perto de qualquer cadeira e retorna o índice
 
-    return false -- Se não estiver perto de nenhuma cadeira, retorna falso
+   for i, chair in ipairs(chairs) do
+      -- A distância é baseada em uma circuferência de raio 83
+      if math.sqrt((playerX - chair.x)^2 + (playerY - chair.y)^2) < 83 then
+      -- Verifica se o nível correspondente está ativo
+         if interactionStates[chair.map] then
+            return true, i
+         end
+      end
+   end
+
+   return false -- Se não estiver perto de nenhuma cadeira, retorna falso
+end
+
+-- Função para mudar de mapa e carregar colisão
+function changeMap(newMap)
+   currentMap = newMap
+   clearColliders()
+
+   if newMap == "mainMap" then
+      loadMapCollisions(gameMap)
+   elseif newMap == "level1" then
+      loadMapCollisions(level1Map)
+   elseif newMap == "level2" then
+      loadMapCollisions(level2Map)
+   elseif newMap == "level3" then
+      loadMapCollisions(level3Map)
+   elseif newMap == "level4" then
+      loadMapCollisions(level4Map)
+   end
 end
 
 -- Função para verificar proximidade com o NPC
 function isNearNPC()
-    local playerX, playerY = player.x, player.y
-    local distance = nil
+   local playerX, playerY = player.x, player.y
+   local distance = nil
 
-    if currentMap == "mainMap" then 
-        distance = math.sqrt((playerX - npc.x)^2 + (playerY - npc.y)^2)    
-    elseif currentMap == "level3" then
-	distance = math.sqrt((playerX - npcAlbini.x)^2 + (playerY - npcAlbini.y)^2) 
-    end
+   if currentMap == "mainMap" then 
+      distance = math.sqrt((playerX - npc.x)^2 + (playerY - npc.y)^2)    
+   elseif currentMap == "level3" then
+      distance = math.sqrt((playerX - npcAlbini.x)^2 + (playerY - npcAlbini.y)^2) 
+   end
 
-    if distance then 
-        return (distance < 80) -- Retorna true se estiver próximo o suficiente
-    else 
-	return false
-    end
+   if distance then 
+      return (distance < 80) -- Retorna true se estiver próximo o suficiente
+   else 
+      return false
+   end
 end
 
 -- Função para desenhar moedas
 function DrawCoins()
-    for i, coin in ipairs(coins) do
-        if not coin.CollectCoin then 
-	    CoinAnim:draw(CoinSprite, coin.x, coin.y, 0, 3, 3, 8, 8)	
-        end
-    end
+   for i, coin in ipairs(coins) do
+      if not coin.CollectCoin then 
+         CoinAnim:draw(CoinSprite, coin.x, coin.y, 0, 3, 3, 8, 8)	
+      end
+   end
 end
 
 -- Função para remover todas as colisões
