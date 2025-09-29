@@ -708,9 +708,11 @@ local function checkGatePositions()
     end
 
     if currentMap == "level2" then
-        if isGateAtCorrectPosition(andGate, gateDestinations[2]) and 
-           isGateAtCorrectPosition(andGateExtra, gateDestinations[3]) and
+        -- verifica se as portas estão nas posições corretas
+        if (isGateAtCorrectPosition(andGate, gateDestinations[2]) or isGateAtCorrectPosition(andGate, gateDestinations[3])) and 
+           (isGateAtCorrectPosition(andGateExtra, gateDestinations[3]) or isGateAtCorrectPosition(andGateExtra, gateDestinations[2])) and
            isGateAtCorrectPosition(orGate, gateDestinations[4]) then
+
             -- Portas estão na posição correta, vá para o mapa principal
             interactionStates.level2 = false
             changeGameState("running")
@@ -788,7 +790,11 @@ function love.keypressed(key)
         sounds.blip:play()
     end
     if key == 'z' then
-        sounds.music:stop()
+        if sounds.music:isPlaying() then
+            sounds.music:pause()
+        else
+            sounds.music:play()
+        end
     end
  
     if key == 'b' then -- Botão para comprar binários
