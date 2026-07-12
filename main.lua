@@ -142,8 +142,8 @@ local showInteractionMessage2 = false
 
 -- NPC
 local npc = {
-    x = 700,
-    y = 600,
+    x = 1112,
+    y = 2663,
     spriteSheet = nil,
     grid = nil,
     animation = nil,
@@ -180,8 +180,8 @@ local npcAlbini = {
 local schoolBus = {
     texture = nil,
     x = -200, -- Começa fora da tela à esquerda
-    y = 440,  -- Posição Y onde o ônibus vai parar
-    targetX = 400, -- Posição onde o ônibus para para deixar o jogador
+    y = 2658,  -- Posição Y onde o ônibus vai parar
+    targetX = 948, -- Posição onde o ônibus para para deixar o jogador
     speed = 400,
     state = "arriving", -- "arriving", "waiting", "leaving", "gone"
     waitTimer = 0,
@@ -248,13 +248,13 @@ function love.load()
 
     sti = require 'libraries/sti'
     -- Mapas
-    gameMap = sti('maps/testMap.lua')
+    gameMap = sti('maps/mapaPrincipal2.0.lua')
     menuMap = sti ('maps/menu.lua')
     -- Levels
-    level1Map = sti('maps/level1.lua')
-    level2Map = sti('maps/level2.lua')
-    level3Map = sti('maps/level3.lua')
-    level4Map = sti('maps/level4.lua')
+    level1Map = sti('maps/portas_1.lua')
+    level2Map = sti('maps/portas_2.lua')
+    level3Map = sti('maps/portas_2.lua')
+    level4Map = sti('maps/soma_5.lua')
 
     -- Texturas
     andGateTexture = love.graphics.newImage('maps/Texture/andlogic.png')
@@ -394,7 +394,7 @@ function love.update(dt)
         end
         
         -- Movimento do jogador (só permite se a intro não está ativa OU o ônibus já foi embora)
-        if not gameIntro.active or schoolBus.state == "gone" then
+        if not gameIntro.active or schoolBus.state == "leaving" then
             player.anim:update(dt)
             npc.animation:update(dt) -- Atualizar animação do NPC
 
@@ -488,7 +488,7 @@ function love.update(dt)
     end
 
     -- Camera seguir o boneco (ou o ônibus durante a intro)
-    if gameIntro.active and schoolBus.state ~= "gone" and not gameIntro.playerDropped then
+    if gameIntro.active and schoolBus.state ~= "leaving" and not gameIntro.playerDropped then
         -- Durante a intro, a câmera acompanha o ônibus até largar o jogador
         cam:lookAt(schoolBus.x + 100, schoolBus.y)
     else
@@ -537,9 +537,13 @@ function love.draw()
 
     if game.state["running"] or game.state["paused"] then
         cam:attach()
-            gameMap:drawLayer(gameMap.layers["Ground"]) --desenhando chão
-            gameMap:drawLayer(gameMap.layers["Trees"]) --desenhando árvores
-            
+            gameMap:drawLayer(gameMap.layers["floor"]) --desenhando chão
+            gameMap:drawLayer(gameMap.layers["trees"]) --desenhando árvores
+            gameMap:drawLayer(gameMap.layers["bloqueio_1"]) --desenhando bloqueios
+            gameMap:drawLayer(gameMap.layers["bloqueio_2"]) 
+            gameMap:drawLayer(gameMap.layers["bloqueio_3"]) 
+            gameMap:drawLayer(gameMap.layers["doors"]) --desenhando portas
+
             -- Desenha o ônibus escolar se estiver ativo (dentro da câmera)
             if gameIntro.active then
                 love.graphics.setColor(1, 1, 1, 1) -- Reseta a cor para branco
