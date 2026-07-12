@@ -73,7 +73,7 @@ local gateDestinations = {
 }
 
 local chairs = {
-    {x = 85, y = 920, map = "level1", collisionMap = level1Map},
+    {x = 352, y = 2218, map = "level1", collisionMap = level1Map},
     {x = 1806, y = 1500, map = "level2", collisionMap = level2Map},
     {x = 1806, y = 1820, map = "level3", collisionMap = level3Map},
     {x = 537, y = 1873, map = "level4", collisionMap = level4Map},	
@@ -251,10 +251,10 @@ function love.load()
     gameMap = sti('maps/mapaPrincipal2.0.lua')
     menuMap = sti ('maps/menu.lua')
     -- Levels
-    level1Map = sti('maps/portas_1.lua')
-    level2Map = sti('maps/portas_2.lua')
-    level3Map = sti('maps/portas_2.lua')
-    level4Map = sti('maps/soma_5.lua')
+    level1Map = sti('maps/level1.lua')
+    level2Map = sti('maps/level2.lua')
+    level3Map = sti('maps/level3.lua')
+    level4Map = sti('maps/level4.lua')
 
     -- Texturas
     andGateTexture = love.graphics.newImage('maps/Texture/andlogic.png')
@@ -354,6 +354,13 @@ function love.load()
     buttons.paused_state.replay_game = button("Voltar", startNewGame, nil, 140, 40)
     buttons.paused_state.menu = button("Menu", changeGameState, "menu", 140, 40)
     buttons.paused_state.exit_game = button("Sair", love.event.quit, nil, 140, 40)
+
+    local textoFases = gameMap.layers["textos"]
+    local coordFases = {}
+    for _, obj in ipairs(textoFases.objects) do 
+        coordFases[obj.name] = {x = obj.x, y = obj.y}
+    end
+
 end
 
 --[[ Essa é a segunda função principal: love.update()
@@ -488,7 +495,7 @@ function love.update(dt)
     end
 
     -- Camera seguir o boneco (ou o ônibus durante a intro)
-    if gameIntro.active and schoolBus.state ~= "leaving" and not gameIntro.playerDropped then
+    if gameIntro.active and schoolBus.state ~= "gone" and not gameIntro.playerDropped then
         -- Durante a intro, a câmera acompanha o ônibus até largar o jogador
         cam:lookAt(schoolBus.x + 100, schoolBus.y)
     else
@@ -543,6 +550,7 @@ function love.draw()
             gameMap:drawLayer(gameMap.layers["bloqueio_2"]) 
             gameMap:drawLayer(gameMap.layers["bloqueio_3"]) 
             gameMap:drawLayer(gameMap.layers["doors"]) --desenhando portas
+
 
             -- Desenha o ônibus escolar se estiver ativo (dentro da câmera)
             if gameIntro.active then
@@ -840,6 +848,7 @@ function love.keypressed(key)
 
                if currentMap == "mainMap" then
                   changeMap(chairMap)
+                  --print("Mudou para mapa"..chairMap)
                elseif currentMap == chairMap then 
                   changeMap("mainMap")
                end
@@ -1079,6 +1088,7 @@ function loadMapCollisions(map)
     if map and map.layers then  -- Verifica se o mapa e as camadas existem
         local collisionLayer = map.layers["Walls"]  -- Obtem a camada de colisão chamada "Walls"
         if collisionLayer then
+            --print("existe collisionLayer")
             for _, obj in ipairs(collisionLayer.objects) do
                 local wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
                 wall:setType('static')  -- Define o collider como estático
