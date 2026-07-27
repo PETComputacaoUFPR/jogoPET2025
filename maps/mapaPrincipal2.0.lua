@@ -8,8 +8,8 @@ return {
   height = 50,
   tilewidth = 64,
   tileheight = 64,
-  nextlayerid = 20,
-  nextobjectid = 73,
+  nextlayerid = 24,
+  nextobjectid = 87,
   properties = {},
   tilesets = {
     {
@@ -257,13 +257,97 @@ return {
       }
     },
     {
+      type = "objectgroup",
+      draworder = "topdown",
+      id = 20,
+      name = "bloqueio_1",
+      visible = true,
+      opacity = 1,
+      offsetx = 0,
+      offsety = 0,
+      parallaxx = 1,
+      parallaxy = 1,
+      properties = {},
+      objects = {
+        {
+          id = 81,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = -8,
+          y = 1790,
+          width = 1934,
+          height = 134,
+          rotation = 0,
+          visible = true,
+          properties = {}
+        }
+      }
+    },
+    {
+      type = "objectgroup",
+      draworder = "topdown",
+      id = 21,
+      name = "bloqueio_2",
+      visible = true,
+      opacity = 1,
+      offsetx = 0,
+      offsety = 0,
+      parallaxx = 1,
+      parallaxy = 1,
+      properties = {},
+      objects = {
+        {
+          id = 83,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = -14,
+          y = 1152,
+          width = 1972,
+          height = 128,
+          rotation = 0,
+          visible = true,
+          properties = {}
+        }
+      }
+    },
+    {
+      type = "objectgroup",
+      draworder = "topdown",
+      id = 23,
+      name = "bloqueio_3",
+      visible = true,
+      opacity = 1,
+      offsetx = 0,
+      offsety = 0,
+      parallaxx = 1,
+      parallaxy = 1,
+      properties = {},
+      objects = {
+        {
+          id = 85,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = -10,
+          y = 510,
+          width = 1942,
+          height = 128,
+          rotation = 0,
+          visible = true,
+          properties = {}
+        }
+      }
+    },
+    {
       type = "tilelayer",
       x = 0,
       y = 0,
       width = 30,
       height = 50,
       id = 11,
-      name = "bloqueio_1",
+      name = "bloqueioarte_1",
       visible = true,
       opacity = 1,
       offsetx = 0,
@@ -332,7 +416,7 @@ return {
       width = 30,
       height = 50,
       id = 13,
-      name = "bloqueio_2",
+      name = "bloqueioarte_2",
       visible = true,
       opacity = 1,
       offsetx = 0,
@@ -401,7 +485,7 @@ return {
       width = 30,
       height = 50,
       id = 14,
-      name = "bloqueio_3",
+      name = "bloqueioarte_3",
       visible = true,
       opacity = 1,
       offsetx = 0,

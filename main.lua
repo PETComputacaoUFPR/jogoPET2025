@@ -66,43 +66,45 @@ local orGate = {}
 local gates = {}
 
 local gateDestinations = {
-    {x = 747, y = 682}, -- Posição correta para a porta AND level1
-    {x = 745, y = 676}, -- Posição correta para a porta AND1 level2
-    {x = 745, y = 874}, -- Posição correta para a porta AND2 level2
-    {x = 965, y = 768}  -- Posição correta para a porta OR level2
+    {x = 543, y = 565}, -- Posição correta para a porta AND level1
+    {x = 753, y = 384}, -- Posição correta para a porta AND1 level2
+    {x = 753, y = 579}, -- Posição correta para a porta AND2 level2
+    {x = 993, y = 483}  -- Posição correta para a porta OR level2
 }
 
 local chairs = {
     {x = 352, y = 2218, map = "level1", collisionMap = level1Map},
-    {x = 1806, y = 1500, map = "level2", collisionMap = level2Map},
-    {x = 1806, y = 1820, map = "level3", collisionMap = level3Map},
-    {x = 537, y = 1873, map = "level4", collisionMap = level4Map},	
+    {x = 1567, y = 2213, map = "level2", collisionMap = level2Map},
+    {x = 358, y = 1573, map = "level3", collisionMap = level3Map},
+    {x = 1587, y = 1573, map = "level4", collisionMap = level4Map},	
+    {x = 358, y = 930, map = "level5", collisionMap = level5Map},
+    {x = 1587, y = 930, map = "level6", collisionMap = level6Map}
 }
 
 -- Posição das moedas no level3
 local coins = {
-    {x = 270, y = 971, Collect = false},
-    {x = 580, y = 1430, Collect = false},
-    {x = 1715, y = 714, Collect = false},
-    {x = 1036, y = 27, Collect = false}
+    {x = 700, y = 1230, Collect = false},
+    {x = 495, y = 1060, Collect = false},
+    {x = 780, y = 810, Collect = false},
+    {x = 455, y = 655, Collect = false}
 }
 
 --[[ Posição dos números em bináro e seu valor. 
 --Após comprar os binários '0' ou '1' se aparecerem no jogo ]]--
 local numberStage3 = {
-    { x = 640, y = 460, num = nil },
-    { x = 830, y = 460, num = nil },
-    { x = 1025, y = 460, num = nil },
-    { x = 1215, y = 460, num = nil }
+    { x = 635, y = 480, num = nil },
+    { x = 820, y = 480, num = nil },
+    { x = 1030, y = 480, num = nil },
+    { x = 1220, y = 480, num = nil }
 }
 
 CorrectNumberStage3 = { 1, 0, 1, 1}
 
 local numberStage4N = {
-    { x = 572, y = 520, num = nil },
-    { x = 772, y = 520, num = nil },
-    { x = 962, y = 520, num = nil },
-    { x = 1146, y = 520, num = nil }
+    { x = 620, y = 480, num = nil },
+    { x = 830, y = 480, num = nil },
+    { x = 1000, y = 480, num = nil },
+    { x = 1200, y = 480, num = nil }
 }
 
 local CorrectNumberStage4N = { 0, 1, 1, 0} -- 6 
@@ -128,10 +130,19 @@ local CorrectNumberStage4C2 = { 1, 0, 1, 0}
 local previousPlayerX, previousPlayerY
 
 local interactionStates = {
-    level1 = true,
+    level1 = true, 
     level2 = true,
     level3 = true,
     level4 = true,
+    level5 = true,
+    level6 = true
+}
+
+local autoReturn = {
+    active = false,
+    timer = 0,
+    duration = 3,
+    level = nil
 }
 
 -- Mensagem 1 do tutorial
@@ -215,6 +226,29 @@ local function startNewGame ()
     schoolBus.waitTimer = 0
 end
 
+local barreiras = {
+    {colisao = "bloqueio_1",
+    art = "bloqueioarte_1",
+    requer = {"level1", "level2"}
+    },
+    {colisao = "bloqueio_2",
+    art = "bloqueioarte_2",
+    requer = {"level3", "level4"}
+    },
+    {colisao = "bloqueio_3",
+    art = "bloqueioarte_3",
+    requer = {"level5", "level6"}
+    }
+}
+
+local function barreiraCumprida(barreira)
+    for _, lvl in ipairs(barreira.requer) do
+        if interactionStates[lvl] ~= false then
+            return false
+        end
+    end
+    return true
+end
 -- Função que verifica quando o mouse clica nos botões
 function love.mousepressed(x, y, button, istouch, presses) 
     if not game.state["running"] then
@@ -255,6 +289,8 @@ function love.load()
     level2Map = sti('maps/level2.lua')
     level3Map = sti('maps/level3.lua')
     level4Map = sti('maps/level4.lua')
+    level5Map = sti('maps/level5.lua')
+    level6Map = sti('maps/level6.lua')
 
     -- Texturas
     andGateTexture = love.graphics.newImage('maps/Texture/andlogic.png')
@@ -264,20 +300,20 @@ function love.load()
     number1Texture = love.graphics.newImage('maps/Texture/binary1.png')
 
     andGate = {
-        x = 762,
-        y = 1054,
+        x = 863,
+        y = 744,
         beingCarried = false
     }
 
     andGateExtra = {
-        x = 426,
-        y = 717,
+        x = 1064,
+        y = 800,
         beingCarried = false
     }
 
     orGate = {
-        x = 526,
-        y = 1246,
+        x = 1064,
+        y = 994,
         beingCarried = false
     }
 
@@ -297,7 +333,8 @@ function love.load()
     sounds.music = love.audio.newSource('sounds/smw_bonus.mp3', 'stream')
     sounds.music:setLooping(true)
 
-    sounds.music:play()
+    sounds.music:play() 
+    -- desativei temporariamente pq não aguento mais essa música
 
     cursorImage = love.graphics.newImage('libraries/cursor/cursor1.png')
 
@@ -346,6 +383,22 @@ function love.load()
 
     walls = {}
     loadMapCollisions(gameMap)
+
+    -- barreiras de fases
+    --[[
+    for _, barreira in ipairs(barreiras) do
+        barreira.collider = nil
+        local layer = gameMap.layers[barreira.colisao]
+        if layer then 
+            for _, obj in ipairs(layer.objects) do
+                barreira.collider = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
+                barreira.collider:setType('static')
+            end
+        end
+    end
+    ]]--
+
+    loadBarreiras()
 
     buttons.menu_state.play_game = button("Jogar", startNewGame, nil, 140, 40)
     buttons.menu_state.settings = button("Ajustes", nil, nil, 140, 40)
@@ -399,6 +452,15 @@ function love.update(dt)
                 gameIntro.playerVisible = true
             end
         end
+
+        if autoReturn.active then
+            autoReturn.timer = autoReturn.timer + dt
+            if autoReturn.timer >= autoReturn.duration then
+                interactionStates[autoReturn.level] = false -- marca como vencido
+                changeMap("mainMap")
+                autoReturn.active = false
+            end
+        end 
         
         -- Movimento do jogador (só permite se a intro não está ativa OU o ônibus já foi embora)
         if not gameIntro.active or schoolBus.state == "leaving" then
@@ -515,8 +577,17 @@ function love.update(dt)
         cam.y = h/2
     end
 
-    local mapW = gameMap.width * gameMap.tilewidth
-    local mapH = gameMap.height * gameMap.tileheight
+    local activeMap = gameMap;
+    if currentMap == "level1" then activeMap = level1Map
+    elseif currentMap == "level2" then activeMap = level2Map
+    elseif currentMap == "level3" then activeMap = level3Map
+    elseif currentMap == "level4" then activeMap = level4Map
+    elseif currentMap == "level5" then activeMap = level5Map
+    elseif currentMap == "level6" then activeMap = level6Map
+    end
+    
+    local mapW = activeMap.width * activeMap.tilewidth
+    local mapH = activeMap.height * activeMap.tileheight
 
     if cam.x > (mapW - w/2) then
         cam.x = (mapW - w/2)
@@ -530,6 +601,13 @@ function love.update(dt)
         CoinAnim:update(dt)
     end
 
+    -- atualiza o bloqueio feito pelas barreiras
+    for _, barreira in ipairs(barreiras) do
+        if barreira.collider and barreiraCumprida(barreira) then
+            barreira.collider:destroy()
+            barreira.collider = nil
+        end
+    end
 end
 
 --[[ Essa é a última função principal: love.draw().
@@ -542,13 +620,18 @@ nível 1 serem exibidos --]]
 function love.draw()
     love.graphics.setFont(font8bit)
 
-    if game.state["running"] or game.state["paused"] then
+    if game.state["running"] or game.state["paused"] and currentMap == "mainMap" then
         cam:attach()
             gameMap:drawLayer(gameMap.layers["floor"]) --desenhando chão
             gameMap:drawLayer(gameMap.layers["trees"]) --desenhando árvores
-            gameMap:drawLayer(gameMap.layers["bloqueio_1"]) --desenhando bloqueios
-            gameMap:drawLayer(gameMap.layers["bloqueio_2"]) 
-            gameMap:drawLayer(gameMap.layers["bloqueio_3"]) 
+
+            -- as barreiras dependem dos niveis que o jogador completou
+            for _, barreira in ipairs(barreiras) do
+                if not barreiraCumprida(barreira) then
+                    gameMap:drawLayer(gameMap.layers[barreira.art])
+                end
+            end
+
             gameMap:drawLayer(gameMap.layers["doors"]) --desenhando portas
 
 
@@ -630,7 +713,8 @@ function love.draw()
     if currentMap == "level3" then
         cam:attach()
             level3Map:drawLayer(level3Map.layers["Ground"]) --desenhando chão
-	         level3Map:drawLayer(level3Map.layers["letters"]) --desenhando o puzzle
+            -- removi porque estava dando erro
+            --level3Map:drawLayer(level3Map.layers["letters"]) --desenhando o puzzle
 	    
 	         -- Desenhar moedas e apagá-las ao passar com o player por cima
             for i, coin in ipairs(coins) do
@@ -663,7 +747,8 @@ function love.draw()
     if currentMap == "level4" then
         cam:attach()
             level4Map:drawLayer(level4Map.layers["Ground"]) --desenhando chão
-            level4Map:drawLayer(level4Map.layers["Number"]) --desenhando o números
+            -- removi pelo mesmo erro do level3 
+            -- level4Map:drawLayer(level4Map.layers["Number"]) --desenhando o números
             
 	         -- Desenhar os binários
             DrawNumber(numberStage4N) -- Binário Normal
@@ -672,6 +757,20 @@ function love.draw()
 	
             player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, nil, 6, 9) --desenhando o boneco
             --world:draw()
+        cam:detach()
+    end
+
+    if currentMap == "level5" then
+        cam:attach()
+        level5Map:drawLayer(level5Map.layers["Ground"])
+        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, nil, 6, 9) --desenhando o boneco
+        cam:detach()
+    end
+
+    if currentMap == "level6" then
+        cam:attach()
+        level6Map:drawLayer(level6Map.layers["Ground"])
+        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, nil, 6, 9) --desenhando o boneco
         cam:detach()
     end
 
@@ -701,7 +800,7 @@ end
 -- Função para determinar se a porta lógica está posicionada no lugar correto
 -- Se ela estiver, então a próxima ação será desbloqueada
 local function isGateAtCorrectPosition(gate, destination)
-    local tolerance = 40 -- Tolerância para considerar que a porta está na posição correta
+    local tolerance = 100 -- Tolerância para considerar que a porta está na posição correta
     return math.abs(gate.x - destination.x) < tolerance and math.abs(gate.y - destination.y) < tolerance
 end
 
@@ -715,6 +814,7 @@ local function checkGatePositions()
             changeGameState("running")
             clearColliders()
             loadMapCollisions(gameMap)
+            loadBarreiras()
             currentMap = "mainMap"
         end
     end
@@ -728,6 +828,7 @@ local function checkGatePositions()
             changeGameState("running")
             clearColliders()
             loadMapCollisions(gameMap)
+            loadBarreiras()
             currentMap = "mainMap"
         end
     end
@@ -739,11 +840,18 @@ local function checkGatePositions()
             changeGameState("running")
             clearColliders()
             loadMapCollisions(gameMap)
+            loadBarreiras()
             currentMap = "mainMap"
         end
     end
 
     if currentMap == "level4" then
+        -- debug
+        --[[
+        print("print da linha")
+        for _, i in ipairs(numberStage4N) do
+            print(i.num)
+        end]]--
         if numberRightPlace(numberStage4N, CorrectNumberStage4N) and
             numberRightPlace(numberStage4C1, CorrectNumberStage4C1) and
 	         numberRightPlace(numberStage4C2, CorrectNumberStage4C2) then
@@ -752,6 +860,7 @@ local function checkGatePositions()
             changeGameState("running")
             clearColliders()
             loadMapCollisions(gameMap)
+            loadBarreiras()
             currentMap = "mainMap"
         end
     end
@@ -847,9 +956,15 @@ function love.keypressed(key)
                -- Verifica qual cadeira está perto e muda o mapa de acordo
 
                if currentMap == "mainMap" then
-                  changeMap(chairMap)
-                  --print("Mudou para mapa"..chairMap)
-               elseif currentMap == chairMap then 
+                    changeMap(chairMap)
+                    --print("Mudou para mapa"..chairMap)
+                    -- roda 5 e 6
+                    if chairMap == "level5" or chairMap == "level6" then
+                        autoReturn.active = true
+                        autoReturn.timer = 0
+                        autoReturn.level = chairMap
+                    end
+                elseif currentMap == chairMap then 
                   changeMap("mainMap")
                end
             end
@@ -994,18 +1109,46 @@ end
 function changeMap(newMap)
    currentMap = newMap
    clearColliders()
+   clearBarreiras()
 
    if newMap == "mainMap" then
       loadMapCollisions(gameMap)
+      loadBarreiras()
+      player.collider:setPosition(previousPlayerX, previousPlayerY)
+      player.x = previousPlayerX
+      player.y = previousPlayerY
    elseif newMap == "level1" then
       loadMapCollisions(level1Map)
+      player.collider:setPosition(500,695)
+      player.x = 500
+      player.y = 695
    elseif newMap == "level2" then
       loadMapCollisions(level2Map)
+      player.collider:setPosition(500,695)
+      player.x = 500
+      player.y = 695
    elseif newMap == "level3" then
       loadMapCollisions(level3Map)
+      player.collider:setPosition(1210,1340)
+      player.x = 1210
+      player.y = 1340
    elseif newMap == "level4" then
       loadMapCollisions(level4Map)
-   end
+      player.collider:setPosition(1210,1340)
+      player.x = 1210
+      player.y = 1340
+    elseif newMap == "level5" then
+        loadMapCollisions(level5Map)
+        player.collider:setPosition(1350,775)
+        player.x = 1350
+        player.y = 775
+    elseif newMap == "level6" then
+        loadMapCollisions(level6Map)
+        player.collider:setPosition(1350,775)
+        player.x = 1350
+        player.y = 775
+     end
+
 end
 
 -- Função para verificar proximidade com o NPC
@@ -1035,10 +1178,36 @@ function DrawCoins()
    end
 end
 
+-- Cria as barreiras de fases (só as que ainda não foram cumpridas)
+function loadBarreiras()
+    for _, barreira in ipairs(barreiras) do
+        barreira.collider = nil
+        if not barreiraCumprida(barreira) then
+            local layer = gameMap.layers[barreira.colisao]
+            if layer then
+                for _, obj in ipairs(layer.objects) do
+                    barreira.collider = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
+                    barreira.collider:setType('static')
+                end
+            end
+        end
+    end
+end
+
+-- Remove todas as barreiras de fases do mundo físico
+function clearBarreiras()
+    for _, barreira in ipairs(barreiras) do
+        if barreira.collider then
+            barreira.collider:destroy()
+            barreira.collider = nil
+        end
+    end
+end
+
 -- Função para remover todas as colisões
 function clearColliders()
     for i, wall in ipairs(walls) do
-        wall:destroy() 
+        wall:destroy()
     end
     walls = {}
 end
